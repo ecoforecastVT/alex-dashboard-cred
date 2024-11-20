@@ -1,0 +1,94 @@
+---
+title: Water Quality Forecasts
+---
+
+This page contains information about the water quality of Lake Alexandrina
+<br />
+<br />
+
+## Water Temperature Forecast 
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(arrow)
+source('./R/dashboard_plotting_tool.R')
+
+s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+s3_targets <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/targets/ALEX", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+site <- 'ALEX'
+
+most_recent <-  arrow::open_dataset(s3_score) |> 
+  filter(site_id %in% c("ALEX")) |> 
+  summarize(max = max(reference_datetime)) |> 
+  collect() |> 
+  pull()
+
+
+obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  # filter(datetime <= obs_dates_grab,
+  #        datetime <= most_recent) |> 
+  filter(variable == 'temperature') |> 
+  #select(datetime, observation) |> 
+  #collect() |> 
+  mutate(reference_datetime = most_recent)
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "temperature",
+         depth %in% c(0.5),
+         site_id %in% site,
+         horizon >= 0,
+         reference_datetime == most_recent) |>
+  dplyr::collect()
+
+dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(10,30), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
+
+```
+
+<br />
+<br />
+
+## Salinity Forecast 
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+## SALT PLOT 
+obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  # filter(datetime <= obs_dates_grab,
+  #        datetime <= most_recent) |> 
+  filter(variable == 'salt') |> 
+  #select(datetime, observation) |> 
+  collect() |> 
+  mutate(reference_datetime = most_recent)
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "salt",
+         depth %in% c(0.5),
+         site_id %in% site,
+         horizon >= 0,
+         reference_datetime == most_recent) |>
+  dplyr::collect()
+
+dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0,1), site_name = site, obs_hist = obs_df, historical_horizon = 30)
+
+```
+<br />
+<br />
+## Lake Depth Forecast 
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+## Depth PLOT 
+obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  # filter(datetime <= obs_dates_grab,
+  #        datetime <= most_recent) |> 
+  filter(variable == 'depth') |> 
+  #select(datetime, observation) |> 
+  collect() |> 
+  mutate(reference_datetime = most_recent)
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "depth",
+         site_id %in% site,
+         horizon >= 0,
+         reference_datetime == most_recent) |>
+  dplyr::collect()
+
+dashboard_plotting_tool(data = score_df, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,10), site_name = site, obs_hist = obs_df, historical_horizon = 30)

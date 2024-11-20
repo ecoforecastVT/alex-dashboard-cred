@@ -1,0 +1,162 @@
+---
+title: Weather Forecasts
+---
+
+This page contains information about weather in the Lake Alexandrina area
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(arrow)
+library(bslib)
+library(bsicons)
+library(leaflet)
+
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+
+s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+most_recent <-  arrow::open_dataset(s3_score) |> 
+  filter(site_id %in% c("ALEX")) |> 
+  summarize(max = max(reference_datetime)) |> 
+  collect() |> 
+  pull()
+
+## Met vizualization
+# windspeed 
+noaa_date <- most_recent - lubridate::days(2)
+noaa_df <- arrow::s3_bucket(file.path("bio230121-bucket01/flare/drivers/met/gefs-v12/stage2",paste0("reference_datetime=",noaa_date),paste0("site_id=ALEX")),
+                 endpoint_override = 'renc.osn.xsede.org',
+                 anonymous = TRUE)
+
+# northwind_df <- arrow::open_dataset(noaa_df) |> 
+#   dplyr::filter(variable %in% c("northward_wind")) |> 
+#   collect() |> 
+#   summarise(northward_hourly = median(prediction, na.rm = TRUE), .by = c("datetime")) |>  #summarise(mean_north_wind = median(prediction, na.rm = TRUE), .by = c("datetime")) |> 
+#   mutate(date = lubridate::as_date(datetime)) |> 
+#   summarise(northward = mean(northward_hourly, na.rm = TRUE), .by = c("date")) # get the mean wind for each day
+#   
+# eastwind_df <- arrow::open_dataset(noaa_df) |> 
+#   dplyr::filter(variable %in% c("eastward_wind")) |> 
+#   collect() |> 
+#   summarise(eastward_hourly = median(prediction, na.rm = TRUE), .by = c("datetime")) |>  #summarise(mean_north_wind = median(prediction, na.rm = TRUE), .by = c("datetime")) |> 
+#   mutate(date = lubridate::as_date(datetime)) |> 
+#   summarise(eastward = mean(eastward_hourly, na.rm = TRUE), .by = c("date")) # get the mean wind for each day
+
+northwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("northward_wind")) |> 
+  collect()
+
+eastwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("eastward_wind")) |> 
+  collect()
+
+wind_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df) |> 
+  pivot_wider(names_from = variable, values_from = prediction) |> 
+  group_by(parameter, datetime) |> 
+  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
+  group_by(datetime) |> ## group across EMs
+  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
+         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
+         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
+         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
+         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
+         northwind_avg_em = median(northward_wind, na.rm = TRUE)) |> 
+  ungroup() |> 
+  distinct(datetime, .keep_all = TRUE)
+
+wind_df_daily_avg <- wind_df_em_avg |> 
+  mutate(date = as.Date(datetime)) |> 
+  group_by(date) |> 
+  mutate(windspeed_median_daily = median(windspeed_median_em, na.rm = TRUE),
+         #windspeed_sd_daily = sd(windspeed_median_em, na.rm = TRUE),
+         windspeed_ci_025_daily = mean(windspeed_ci_025_em, na.rm = TRUE),
+         windspeed_ci_975_daily = mean(windspeed_ci_975_em, na.rm = TRUE),
+         eastwind_avg_daily = median(eastwind_avg_em, na.rm = TRUE), 
+         northwind_avg_daily = median(northwind_avg_em, na.rm = TRUE)) |> 
+  ungroup() |> 
+  distinct(date, .keep_all = TRUE) |> 
+  select(date, 
+         windspeed = windspeed_median_daily, 
+         windspeed_ci_025 = windspeed_ci_025_daily, 
+         windspeed_ci_975 = windspeed_ci_975_daily,
+         eastwind = eastwind_avg_daily, 
+         northwind = northwind_avg_daily)
+  
+
+degToCompass <- function(num){
+  val = as.numeric((num/22.5) + 0.5)
+  arr = c("N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW")
+  return(arr[val %% 16])
+}
+
+wind_df <- wind_df_daily_avg |> 
+  mutate(wind_deg = (270-atan2(eastwind,northwind)*180/pi)%%360, 
+         wind_dir = degToCompass(wind_deg))
+
+avg_wind_speed_3_day_future <- wind_df |> 
+  filter(date > as.Date(most_recent), 
+         date < (as.Date(most_recent) + lubridate::days(3))) |> 
+  summarise(avg_windspeed = mean(windspeed)) |> 
+  pull(avg_windspeed)
+
+avg_wind_dir_3_day_future <- wind_df |> 
+  filter(date > as.Date(most_recent), 
+         date < (as.Date(most_recent) + lubridate::days(3))) |> 
+  summarise(avg_wind_deg = mean(wind_deg)) |> 
+  mutate(avg_wind_dir = degToCompass(avg_wind_deg)) |> 
+  pull(avg_wind_dir)
+
+avg_wind_dir_3_day_past <- wind_df |> 
+  filter(date < as.Date(most_recent), 
+         date > (as.Date(most_recent) - lubridate::days(3))) |> 
+  summarise(avg_wind_deg = mean(wind_deg)) |> 
+  mutate(avg_wind_dir = degToCompass(avg_wind_deg)) |> 
+  pull(avg_wind_dir)
+
+```
+<br />
+<br />
+
+## Wind Direction and Speed
+```{r}
+
+layout_column_wrap(
+  width = "250px",
+  value_box(
+    title = "Average wind speed for the next three days", 
+    value = paste0(round(avg_wind_speed_3_day_future,1), 'm/s'),
+    showcase = bs_icon("wind"),
+    theme_color = "success" 
+  ),
+  value_box(
+    title = "Average wind direction for the next three days", 
+    value = avg_wind_dir_3_day_future,
+    showcase = bs_icon("compass"),
+    theme_color = "primary"
+  )
+)
+
+```
+<br />
+<br />
+
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## ADD UNCERTAINTY TO THIS PLOT 
+
+wind_df_subset <- wind_df |> 
+  filter(date > as.Date(most_recent), 
+         date <= (as.Date(most_recent) + lubridate::days(3)))
+
+ggplot2::ggplot(wind_df_subset, aes(x=as.Date(date))) +
+  geom_line(aes(y=windspeed), line = 'black') +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = windspeed_ci_025, 
+                                    ymax = windspeed_ci_975),
+                       alpha = 0.5,
+                       fill = 'lightblue') +
+  labs(x = 'Date',
+       y = 'Windspeed (m/s)',
+       title = 'Three-day Wind Speed Forecast') +
+  ggplot2::theme(plot.title = element_text(hjust = 0.5))
+  
+```
+
