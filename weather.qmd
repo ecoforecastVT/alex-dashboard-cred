@@ -116,22 +116,22 @@ avg_wind_dir_3_day_past <- wind_df |>
 <br />
 <br />
 
-## Wind Direction and Speed
+## 3-Day Wind Direction and Wind Speed Predictions 
 ```{r}
 
 layout_column_wrap(
   width = "250px",
   value_box(
-    title = "Average wind speed for the next three days", 
-    value = paste0(round(avg_wind_speed_3_day_future,1), 'm/s'),
-    showcase = bs_icon("wind"),
-    theme_color = "success" 
-  ),
-  value_box(
     title = "Average wind direction for the next three days", 
     value = avg_wind_dir_3_day_future,
     showcase = bs_icon("compass"),
     theme_color = "primary"
+  ),
+    value_box(
+    title = "Average wind speed for the next three days", 
+    value = paste0(round(avg_wind_speed_3_day_future,1), ' m/s'),
+    showcase = bs_icon("wind"),
+    theme_color = "success" 
   )
 )
 
@@ -139,7 +139,7 @@ layout_column_wrap(
 <br />
 <br />
 
-```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r}
 
 ## ADD UNCERTAINTY TO THIS PLOT 
 
@@ -155,7 +155,7 @@ ggplot2::ggplot(wind_df_subset, aes(x=as.Date(date))) +
                        fill = 'lightblue') +
   labs(x = 'Date',
        y = 'Windspeed (m/s)',
-       title = 'Three-day Wind Speed Forecast') +
+       title = 'Three-Day Wind Speed Forecast') +
   ggplot2::theme(plot.title = element_text(hjust = 0.5))
   
 ```

@@ -1,0 +1,25 @@
+# Learn more
+
+See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the Center for Ecosystem Forecasting at Virginia Tech.
+
+# Documentation for Lake Alexandrina Forecasts
+
+We provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code). 
+
+## Relevant Research from the Center for Ecosystem Forecasting  
+
+Publications and other information about [Lake Alexandrina](https://www.ltreb-reservoirs.org/products/#publications-forecasting-and-modeling).
+
+Learn more about the Center for Ecosystem Forecasting [here](https://ecoforecast.centers.vt.edu/research.html).
+
+## Accessing Lake Alexandrina Forecasts
+
+DO WE WANT TO PROVIDE THIS INFORMATION HERE??
+
+We provide 256 ensemble member forecasts at a daily time resolution
+
+Variables and units are:
+
+-   Temp_C_mean (C)\
+-   DO_mgL_mean (mg/L)\
+-   Salinity (ppt)\
