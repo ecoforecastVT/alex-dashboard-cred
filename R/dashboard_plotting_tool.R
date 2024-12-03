@@ -48,7 +48,7 @@ dashboard_plotting_tool <- function(data, depths = 0.5, tzone = "America/New_Yor
   
   
   if (num_depths > 1){
-    ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
+    p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
       ggplot2::ylim(ylims) +
       ggplot2::xlim(c(as.Date(min((curr_tibble$date)) - lubridate::days(historical_horizon)), (as.Date(max(curr_tibble$date)) + lubridate::days(5)))) +
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5)+
@@ -87,7 +87,7 @@ dashboard_plotting_tool <- function(data, depths = 0.5, tzone = "America/New_Yor
   } else if (num_depths == 1){
     message('using one depth...')
     
-    ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
+    p <- ggplot2::ggplot(curr_tibble, ggplot2::aes(x = as.Date(date))) +
       ggplot2::ylim(ylims) +
       ggplot2::xlim(c(as.Date(min((curr_tibble$date)) - lubridate::days(historical_horizon)), (as.Date(max(curr_tibble$date)) + lubridate::days(5)))) +
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
@@ -110,4 +110,6 @@ dashboard_plotting_tool <- function(data, depths = 0.5, tzone = "America/New_Yor
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      plot.title = element_text(hjust = 0.5))
   }
+  
+  return(p)
 }

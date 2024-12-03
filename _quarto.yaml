@@ -1,0 +1,43 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Lake Alexandrina Dashboard"
+  page-navigation: true
+  repo-url: https://github.com/addelany/ALEX-dashboard
+  repo-actions: [source, issue]
+
+  navbar:
+    background: primary
+    search: true
+    left:
+      - href: https://flare-forecast.org/
+        text: Home
+        icon: house-door
+      - href: index.qmd
+        icon: info-square
+      - href: water.qmd
+        icon: droplet
+      - href: weather.qmd
+        icon: brightness-high-fill
+      - href: learn-more.qmd
+        icon: globe
+
+  page-footer:
+    left: "CC-BY"
+    right:
+      - icon: github
+        href: https://github.com/addelany/ALEX-dashboard
+
+format:
+  html:
+    theme: [cerulean, custom.scss]
+    css: styles.css
+    title-block-style: default
+    title-block-banner: "img/banner.jpg"
+    title-block-banner-color: white
+    page-layout: full
+    toc: true
+
+editor: visual
