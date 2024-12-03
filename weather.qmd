@@ -83,13 +83,29 @@ wind_df_daily_avg <- wind_df_em_avg |>
   
 
 degToCompass <- function(num){
-  val = as.numeric((num/22.5) + 0.5)
+
   arr = c("N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW")
-  return(arr[val %% 16])
+
+  val = as.numeric((num/22.5) + 0.5)
+  val_position <- val %% 16
+
+  
+  if (any(val > 16)){
+    val_issue <- which(val > 16)
+    
+    for (i in val_issue){
+      print(i)
+      val_position[i] <- 16 #(16*16)
+    }
+  }
+  
+  wind_direction <- arr[val_position] 
+  
+  return(wind_direction)
 }
 
 wind_df <- wind_df_daily_avg |> 
-  mutate(wind_deg = (270-atan2(eastwind,northwind)*180/pi)%%360, 
+  mutate(wind_deg = ((270-atan2(eastwind,northwind)*180/pi)%%360), 
          wind_dir = degToCompass(wind_deg))
 
 avg_wind_speed_3_day_future <- wind_df |> 
