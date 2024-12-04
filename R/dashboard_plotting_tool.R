@@ -14,7 +14,7 @@ dashboard_plotting_tool <- function(data, depths = 0.5, tzone = "America/New_Yor
     var_unit = 'Salinity (ppt)'
     label_height_adjust <- 0.01
   } else if(data_var == 'depth'){
-    var_title = 'Laker Depth'
+    var_title = 'Lake Depth'
     var_unit = 'Depth (m)' 
     label_height_adjust <- 0.5
   } else{

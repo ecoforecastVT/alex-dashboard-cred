@@ -91,13 +91,19 @@ degToCompass <- function(num){
 
   
   if (any(val > 16)){
-    val_issue <- which(val > 16)
+    val_over <- which(val > 16)
     
-    for (i in val_issue){
+    for (i in val_over){
       print(i)
-      val_position[i] <- 16 #(16*16)
+      val_position[i] <- 16 ## hard code the index to 16 (last value in the wind directions)
     }
-  }
+  } else if (any(val < 1)){
+    val_under <- which(val < 1)
+    for (i in val_under){
+      print(i)
+      val_position[i] <- 1 ## hard code the index to 16 (last value in the wind directions)
+    }  
+    }
   
   wind_direction <- arr[val_position] 
   
