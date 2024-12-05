@@ -6,3 +6,4 @@ targets/*
 .Rhistory
 .RData
 .Ruserdata
+/.quarto/
