@@ -20,6 +20,7 @@ Imports:
     bslib,
     bsicons,
     ggiraph,
+    httr,
     patchwork,
     pak,
     reticulate, 
@@ -29,7 +30,8 @@ Imports:
     readr,
     bench,
     future,
-    oce
+    oce,
+    whisker
 Remotes: 
     github::cboettig/minioclient,
     github::eco4cast/neon4cast

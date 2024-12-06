@@ -13,9 +13,9 @@ tpl <- '<?xml version="1.0" encoding="UTF-8"?>
  {{/links}}
 </urlset>'
 
-links <- c(paste0('https://flare-forecast.org', "/water.html"),
-           paste0('https://flare-forecast.org', "/weather.html"),
-           paste0('https://flare-forecast.org', "/index.html"))
+links <- c(paste0('https://flare-forecast.org/alex-dashboard', "/water.html"),
+           paste0('https://flare-forecast.org/alex-dashboard', "/weather.html"),
+           paste0('https://flare-forecast.org/alex-dashboard', "/index.html"))
 
 map_links <- function(l) {
   tmp <- httr::GET(l)
@@ -27,4 +27,4 @@ map_links <- function(l) {
 
 links <- lapply(links, map_links)
 
-cat(whisker.render(tpl), file = "docs/sitemap.xml")
+cat(whisker::whisker.render(tpl), file = "docs/sitemap.xml")
