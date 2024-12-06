@@ -15,6 +15,7 @@ library(arrow)
 library(bslib)
 library(bsicons)
 library(leaflet)
+library(oce)
 
 ### READ IN INSITU TARGETS
 lake_directory <- getwd()

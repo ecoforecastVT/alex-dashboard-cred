@@ -28,7 +28,8 @@ Imports:
     gsheet, 
     readr,
     bench,
-    future
+    future,
+    oce
 Remotes: 
     github::cboettig/minioclient,
     github::eco4cast/neon4cast
