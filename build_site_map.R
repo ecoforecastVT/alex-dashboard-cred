@@ -3,12 +3,22 @@ library(httr)
 
 #config <- yaml::read_yaml('challenge_configuration.yaml')
 
+tpl <- '<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+ {{#links}}
+   <url>
+      <loc>{{{loc}}}</loc>
+      <lastmod>{{{lastmod}}}</lastmod>
+   </url>
+ {{/links}}
+</urlset>'
+
 links <- c(paste0('https://flare-forecast.org', "/water.html"),
            paste0('https://flare-forecast.org', "/weather.html"),
            paste0('https://flare-forecast.org', "/index.html"))
 
 map_links <- function(l) {
-  tmp <- GET(l)
+  tmp <- httr::GET(l)
   d <- tmp$headers[['last-modified']]
   
   list(loc=l,
