@@ -43,7 +43,7 @@ jobs:
 
       - name: Render
         run: |
-          quarto render dashboard
+          quarto render
 
       - name: Build site map
         shell: Rscript {0}
