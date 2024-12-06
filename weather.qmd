@@ -11,76 +11,12 @@ library(bslib)
 library(bsicons)
 library(leaflet)
 
+source('R/wind_plot_dashboard.R')
+
+lake_directory <- getwd()
+options(timeout=300)
+
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
-
-s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
-most_recent <-  arrow::open_dataset(s3_score) |> 
-  filter(site_id %in% c("ALEX")) |> 
-  summarize(max = max(reference_datetime)) |> 
-  collect() |> 
-  pull()
-
-## Met vizualization
-# windspeed 
-noaa_date <- most_recent - lubridate::days(2)
-noaa_df <- arrow::s3_bucket(file.path("bio230121-bucket01/flare/drivers/met/gefs-v12/stage2",paste0("reference_datetime=",noaa_date),paste0("site_id=ALEX")),
-                 endpoint_override = 'renc.osn.xsede.org',
-                 anonymous = TRUE)
-
-# northwind_df <- arrow::open_dataset(noaa_df) |> 
-#   dplyr::filter(variable %in% c("northward_wind")) |> 
-#   collect() |> 
-#   summarise(northward_hourly = median(prediction, na.rm = TRUE), .by = c("datetime")) |>  #summarise(mean_north_wind = median(prediction, na.rm = TRUE), .by = c("datetime")) |> 
-#   mutate(date = lubridate::as_date(datetime)) |> 
-#   summarise(northward = mean(northward_hourly, na.rm = TRUE), .by = c("date")) # get the mean wind for each day
-#   
-# eastwind_df <- arrow::open_dataset(noaa_df) |> 
-#   dplyr::filter(variable %in% c("eastward_wind")) |> 
-#   collect() |> 
-#   summarise(eastward_hourly = median(prediction, na.rm = TRUE), .by = c("datetime")) |>  #summarise(mean_north_wind = median(prediction, na.rm = TRUE), .by = c("datetime")) |> 
-#   mutate(date = lubridate::as_date(datetime)) |> 
-#   summarise(eastward = mean(eastward_hourly, na.rm = TRUE), .by = c("date")) # get the mean wind for each day
-
-northwind_df <- arrow::open_dataset(noaa_df) |> 
-  dplyr::filter(variable %in% c("northward_wind")) |> 
-  collect()
-
-eastwind_df <- arrow::open_dataset(noaa_df) |> 
-  dplyr::filter(variable %in% c("eastward_wind")) |> 
-  collect()
-
-wind_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df) |> 
-  pivot_wider(names_from = variable, values_from = prediction) |> 
-  group_by(parameter, datetime) |> 
-  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
-  group_by(datetime) |> ## group across EMs
-  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
-         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
-         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
-         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
-         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
-         northwind_avg_em = median(northward_wind, na.rm = TRUE)) |> 
-  ungroup() |> 
-  distinct(datetime, .keep_all = TRUE)
-
-wind_df_daily_avg <- wind_df_em_avg |> 
-  mutate(date = as.Date(datetime)) |> 
-  group_by(date) |> 
-  mutate(windspeed_median_daily = median(windspeed_median_em, na.rm = TRUE),
-         #windspeed_sd_daily = sd(windspeed_median_em, na.rm = TRUE),
-         windspeed_ci_025_daily = mean(windspeed_ci_025_em, na.rm = TRUE),
-         windspeed_ci_975_daily = mean(windspeed_ci_975_em, na.rm = TRUE),
-         eastwind_avg_daily = median(eastwind_avg_em, na.rm = TRUE), 
-         northwind_avg_daily = median(northwind_avg_em, na.rm = TRUE)) |> 
-  ungroup() |> 
-  distinct(date, .keep_all = TRUE) |> 
-  select(date, 
-         windspeed = windspeed_median_daily, 
-         windspeed_ci_025 = windspeed_ci_025_daily, 
-         windspeed_ci_975 = windspeed_ci_975_daily,
-         eastwind = eastwind_avg_daily, 
-         northwind = northwind_avg_daily)
-  
 
 degToCompass <- function(num){
 
@@ -96,12 +32,16 @@ degToCompass <- function(num){
     for (i in val_over){
       print(i)
       val_position[i] <- 16 ## hard code the index to 16 (last value in the wind directions)
+      print(length(val_position[i]))
     }
-  } else if (any(val < 1)){
+  } 
+  
+  if (any(val < 1)){
     val_under <- which(val < 1)
     for (i in val_under){
       print(i)
       val_position[i] <- 1 ## hard code the index to 16 (last value in the wind directions)
+      print(length(val_position[i]))
     }  
     }
   
@@ -110,52 +50,300 @@ degToCompass <- function(num){
   return(wind_direction)
 }
 
-wind_df <- wind_df_daily_avg |> 
-  mutate(wind_deg = ((270-atan2(eastwind,northwind)*180/pi)%%360), 
-         wind_dir = degToCompass(wind_deg))
+s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+most_recent <-  arrow::open_dataset(s3_score) |> 
+  filter(site_id %in% c("ALEX")) |> 
+  summarize(max = max(reference_datetime)) |> 
+  collect() |> 
+  pull()
 
-avg_wind_speed_3_day_future <- wind_df |> 
-  filter(date > as.Date(most_recent), 
-         date < (as.Date(most_recent) + lubridate::days(3))) |> 
-  summarise(avg_windspeed = mean(windspeed)) |> 
-  pull(avg_windspeed)
+## Met vizualization
+# windspeed 
+noaa_date <- most_recent - lubridate::days(1)
+noaa_df <- arrow::s3_bucket(file.path("bio230121-bucket01/flare/drivers/met/gefs-v12/stage2",paste0("reference_datetime=",noaa_date),paste0("site_id=ALEX")),
+                 endpoint_override = 'renc.osn.xsede.org',
+                 anonymous = TRUE)
 
-avg_wind_dir_3_day_future <- wind_df |> 
-  filter(date > as.Date(most_recent), 
-         date < (as.Date(most_recent) + lubridate::days(3))) |> 
-  summarise(avg_wind_deg = mean(wind_deg)) |> 
-  mutate(avg_wind_dir = degToCompass(avg_wind_deg)) |> 
-  pull(avg_wind_dir)
+air_temp_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("air_temperature")) |> 
+  collect()
 
-avg_wind_dir_3_day_past <- wind_df |> 
-  filter(date < as.Date(most_recent), 
-         date > (as.Date(most_recent) - lubridate::days(3))) |> 
-  summarise(avg_wind_deg = mean(wind_deg)) |> 
-  mutate(avg_wind_dir = degToCompass(avg_wind_deg)) |> 
-  pull(avg_wind_dir)
+northwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("northward_wind")) |> 
+  collect()
+
+eastwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("eastward_wind")) |> 
+  collect()
+
+future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df) |> 
+  pivot_wider(names_from = variable, values_from = prediction) |> 
+  group_by(parameter, datetime) |> 
+  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
+  group_by(datetime) |> ## group across EMs
+  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
+         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
+         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
+         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
+         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
+         northwind_avg_em = median(northward_wind, na.rm = TRUE),
+         air_temp_avg_em = median((air_temperature - 273.15))) |> 
+  ungroup() |> 
+  distinct(datetime, .keep_all = TRUE) |> 
+  mutate(wind_deg = ((270-atan2(eastwind_avg_em,northwind_avg_em)*180/pi)%%360), ## ADD WIND DIRECTION
+         wind_dir = degToCompass(wind_deg)) |> 
+  select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
+```
+
+<br />
+<br />
+
+
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
+
+# download wind velocity
+download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Vel.Best%20Available--Continuous%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=185&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733427930976"),
+              destfile = file.path(lake_directory,"data_raw","wind_velocity_obs.csv"))
+
+# download wind direction
+download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Dir.Telem%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=52&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733428211983"),
+              destfile = file.path(lake_directory,"data_raw","wind_direction_obs.csv"))
+
+
+## NOAA FUTURE DATA READ IN ABOVE
+
+## NOAA HISTORICAL DATA
+noaa_historical_s3 <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/drivers/met/gefs-v12/stage3/site_id=ALEX", 
+                                   endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+
+historical_date_cutoff <- noaa_date - lubridate::days(10)
+
+noaa_historical_df <- arrow::open_dataset(noaa_historical_s3) |> 
+  filter(variable %in% c('air_temperature','northward_wind','eastward_wind'),
+         datetime <= noaa_date, 
+         datetime > historical_date_cutoff) |> 
+  collect()
+
+historical_met_df_em_avg <- noaa_historical_df |> 
+  pivot_wider(names_from = variable, values_from = prediction) |> 
+  group_by(parameter, datetime) |> 
+  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
+  group_by(datetime) |> ## group across EMs
+  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
+         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
+         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
+         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
+         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
+         northwind_avg_em = median(northward_wind, na.rm = TRUE),
+         air_temp_avg_em = median((air_temperature - 273.15))) |> 
+  ungroup() |> 
+  distinct(datetime, .keep_all = TRUE) |> 
+  mutate(wind_deg = ((270-atan2(eastwind_avg_em,northwind_avg_em)*180/pi)%%360), 
+         wind_dir = degToCompass(wind_deg)) |> 
+  select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
+```
+
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## READ IN WIND OBSERVATIONS
+
+wind_dir_obs <- read_csv('data_raw/wind_direction_obs.csv', skip=1) |> 
+  rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (deg)`, code = `Grade Code`) |> 
+  filter(datetime > (historical_date_cutoff), 
+         datetime <= noaa_date) |> 
+  mutate(date = as.Date(datetime),
+         hour = lubridate::hour(datetime)) |> 
+  group_by(date, hour) |> 
+  summarise(wind_deg_obs = mean(value, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(time = paste0(hour,':00:00'),
+         datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
+  select(datetime, wind_deg_obs)
+
+wind_velocity_obs <- read_csv('data_raw/wind_velocity_obs.csv',skip=1) |> 
+  rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (m/s)`, code = `Grade Code`) |> 
+  filter(datetime > (historical_date_cutoff), 
+         datetime < noaa_date) |>
+  mutate(date = as.Date(datetime),
+         hour = lubridate::hour(datetime)) |> 
+  group_by(date, hour) |> 
+  summarise(wind_speed_obs = mean(value, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(time = paste0(hour,':00:00'),
+         datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
+  select(datetime, wind_speed_obs)
+
+wind_obs_df <- wind_dir_obs |> 
+  right_join(wind_velocity_obs, by = c('datetime'))
+
+historical_met_df <- historical_met_df_em_avg |> 
+  right_join(wind_obs_df, by = c('datetime')) |> 
+  drop_na(wind_deg)
+
+# JOIN historic data / obs with future
+
+future_met_df_em_avg$wind_deg_obs <- NA
+future_met_df_em_avg$wind_speed_obs <- NA
+
+full_met_data_df <- dplyr::bind_rows(historical_met_df, future_met_df_em_avg) |> 
+mutate(wind_speed = wind_speed*3.6,
+wind_speed_obs = wind_speed_obs * 3.6) # convert wind to km/hr
 
 ```
-<br />
-<br />
 
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## MAKE PLOTS
+forecast_start_day <- most_recent
+historical_horizon <- 10
+
+## wind speed 
+ws_ylims <- c(0,40)
+var_unit <- 'Wind Speed (km/s)'
+var_title <- 'Wind Speed'
+
+ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+  ggplot2::ylim(ws_ylims) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::geom_line(ggplot2::aes(y = wind_speed), color = 'black') +
+  ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_speed_obs), color = 'red') +
+  ggplot2::geom_vline(aes(xintercept = forecast_start_day),
+                      alpha = 1, linetype = "dashed") +
+  ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::theme_light() +
+  ggplot2::scale_linetype_manual(name = "",
+                                 values = c('solid'),
+                                 labels = c('Forecast Date')) +
+  ggplot2::scale_y_continuous(name = var_unit,
+                              limits = ws_ylims) +
+  ggplot2::labs(x = "Date",
+                y = var_unit,
+                title = paste0(var_title," Forecast", lubridate::date(full_met_data_df$forecast_start_day))) +#,
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                 plot.title = element_text(hjust = 0.5))
+
+ws_plot
+
+```
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## Wind direction
+wd_ylims <- c(0,360)
+wd_var_unit <- 'Wind Direction (deg)'
+var_title <- 'Wind Direction'
+
+wd_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+  ggplot2::ylim(wd_ylims) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::geom_line(ggplot2::aes(y = wind_deg), color = 'black') +
+  ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
+  ggplot2::geom_vline(aes(xintercept = forecast_start_day),
+                      alpha = 1, linetype = "dashed") +
+  ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(wd_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(wd_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::theme_light() +
+  ggplot2::scale_linetype_manual(name = "",
+                                 values = c('solid'),
+                                 labels = c('Forecast Date')) +
+  ggplot2::scale_y_continuous(name = wd_var_unit,
+                              limits = wd_ylims) +
+  ggplot2::labs(x = "Date",
+                y = var_unit,
+                title = paste0(var_title," Forecast", lubridate::date(full_met_data_df$forecast_start_day))) +#,
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                 plot.title = element_text(hjust = 0.5))
+
+wd_plot
+
+```
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## MAKE PLOTS
+forecast_start_day <- most_recent
+historical_horizon <- 10
+
+## wind speed 
+ws_ylims <- c(0,40)
+var_unit <- 'Wind Speed (km/s)'
+var_title <- 'Wind Speed'
+
+ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+  ggplot2::ylim(ws_ylims) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::geom_line(ggplot2::aes(y = wind_speed), color = 'black') +
+  ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_speed_obs), color = 'red') +
+  ggplot2::geom_vline(aes(xintercept = forecast_start_day),
+                      alpha = 1, linetype = "dashed") +
+  ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::theme_light() +
+  ggplot2::scale_linetype_manual(name = "",
+                                 values = c('solid'),
+                                 labels = c('Forecast Date')) +
+  ggplot2::scale_y_continuous(name = var_unit,
+                              limits = ws_ylims) +
+  ggplot2::labs(x = "Date",
+                y = var_unit,
+                title = paste0(var_title," Forecast", lubridate::date(full_met_data_df$forecast_start_day))) +#,
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                 plot.title = element_text(hjust = 0.5))
+
+ws_plot
+
+```
+
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## Air Temperature
+at_ylims <- c(10,30)
+at_var_title = 'Air Temperature'
+at_var_unit = 'Temperature (°C)' 
+
+at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+  ggplot2::ylim(at_ylims) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::geom_line(ggplot2::aes(y = air_temp), color = 'black') +
+  #ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
+  ggplot2::geom_vline(aes(xintercept = forecast_start_day),
+                      alpha = 1, linetype = "dashed") +
+  ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(at_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(at_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::theme_light() +
+  ggplot2::scale_linetype_manual(name = "",
+                                 values = c('solid'),
+                                 labels = c('Forecast Date')) +
+  ggplot2::scale_y_continuous(name = at_var_unit,
+                              limits = at_ylims) +
+  ggplot2::labs(x = "Date",
+                y = at_var_unit,
+                title = paste0(at_var_title," Forecast")) +#,
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                 plot.title = element_text(hjust = 0.5))
+
+at_plot
 ## 3-Day Wind Direction and Wind Speed Predictions 
+```
+
 ```{r}
 
-layout_column_wrap(
-  width = "250px",
-  value_box(
-    title = "Average wind direction for the next three days", 
-    value = avg_wind_dir_3_day_future,
-    showcase = bs_icon("compass"),
-    theme_color = "primary"
-  ),
-    value_box(
-    title = "Average wind speed for the next three days", 
-    value = paste0(round(avg_wind_speed_3_day_future,1), ' m/s'),
-    showcase = bs_icon("wind"),
-    theme_color = "success" 
-  )
-)
+#layout_column_wrap(
+#  width = "250px",
+#  value_box(
+#    title = "Average wind direction for the next three days", 
+#    value = avg_wind_dir_3_day_future,
+#    showcase = bs_icon("compass"),
+#    theme_color = "primary"
+#  ),
+#    value_box(
+#    title = "Average wind speed for the next three days", 
+#    value = paste0(round(avg_wind_speed_3_day_future,1), ' m/s'),
+#    showcase = bs_icon("wind"),
+#    theme_color = "success" 
+#  )
+#)
 
 ```
 <br />
@@ -165,20 +353,20 @@ layout_column_wrap(
 
 ## ADD UNCERTAINTY TO THIS PLOT 
 
-wind_df_subset <- wind_df |> 
-  filter(date > as.Date(most_recent), 
-         date <= (as.Date(most_recent) + lubridate::days(3)))
+#wind_df_subset <- wind_df |> 
+#  filter(date > as.Date(most_recent), 
+#         date <= (as.Date(most_recent) + lubridate::days(3)))
 
-ggplot2::ggplot(wind_df_subset, aes(x=as.Date(date))) +
-  geom_line(aes(y=windspeed), line = 'black') +
-  ggplot2::geom_ribbon(ggplot2::aes(ymin = windspeed_ci_025, 
-                                    ymax = windspeed_ci_975),
-                       alpha = 0.5,
-                       fill = 'lightblue') +
-  labs(x = 'Date',
-       y = 'Windspeed (m/s)',
-       title = 'Three-Day Wind Speed Forecast') +
-  ggplot2::theme(plot.title = element_text(hjust = 0.5))
+#ggplot2::ggplot(wind_df_subset, aes(x=as.Date(date))) +
+#  geom_line(aes(y=windspeed), line = 'black') +
+#  ggplot2::geom_ribbon(ggplot2::aes(ymin = windspeed_ci_025, 
+#                                    ymax = windspeed_ci_975),
+#                       alpha = 0.5,
+#                       fill = 'lightblue') +
+#  labs(x = 'Date',
+#       y = 'Windspeed (m/s)',
+#       title = 'Three-Day Wind Speed Forecast') +
+#  ggplot2::theme(plot.title = element_text(hjust = 0.5))
   
 ```
 
