@@ -102,6 +102,10 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
 
+if (!dir.exists(file.path(lake_directory,'data_raw'))){
+  dir.create(file.path(lake_directory,'data_raw'))
+}
+
 # download wind velocity
 download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Vel.Best%20Available--Continuous%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=185&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733427930976"),
               destfile = file.path(lake_directory,"data_raw","wind_velocity_obs.csv"))
