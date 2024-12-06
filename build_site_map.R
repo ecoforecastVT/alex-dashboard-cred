@@ -1,11 +1,11 @@
 library(whisker)
 library(httr)
 
-config <- yaml::read_yaml('challenge_configuration.yaml')
+#config <- yaml::read_yaml('challenge_configuration.yaml')
 
-links <- c(paste0(config$challenge_url, "/water.html"),
-           paste0(config$challenge_url, "/weather.html"),
-           paste0(config$challenge_url, "/index.html"))
+links <- c(paste0('https://flare-forecast.org', "/water.html"),
+           paste0('https://flare-forecast.org', "/weather.html"),
+           paste0('https://flare-forecast.org', "/index.html"))
 
 map_links <- function(l) {
   tmp <- GET(l)
@@ -17,4 +17,4 @@ map_links <- function(l) {
 
 links <- lapply(links, map_links)
 
-cat(whisker.render(tpl), file = "dashboard/docs/sitemap.xml")
+cat(whisker.render(tpl), file = "docs/sitemap.xml")
