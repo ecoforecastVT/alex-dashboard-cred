@@ -25,6 +25,7 @@ most_recent <-  arrow::open_dataset(s3_score) |>
   collect() |> 
   pull()
 
+source('R/alex_target_generation.R')
 
 obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
   # filter(datetime <= obs_dates_grab,
