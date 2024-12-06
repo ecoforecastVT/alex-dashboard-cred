@@ -7,3 +7,5 @@ targets/*
 .RData
 .Ruserdata
 /.quarto/
+
+docs/
