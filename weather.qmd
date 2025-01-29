@@ -95,9 +95,7 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
   select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
 ```
 
-<br />
-<br />
-
+<br /> <br />
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
@@ -204,7 +202,7 @@ historical_horizon <- 10
 
 ## wind speed 
 ws_ylims <- c(0,40)
-var_unit <- 'Wind Speed (km/s)'
+var_unit <- 'Wind Speed (km/hr)'
 var_title <- 'Wind Speed'
 
 ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
@@ -263,39 +261,40 @@ wd_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
 wd_plot
 
 ```
-```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 
-## MAKE PLOTS
-forecast_start_day <- most_recent
-historical_horizon <- 10
-
-## wind speed 
-ws_ylims <- c(0,40)
-var_unit <- 'Wind Speed (km/s)'
-var_title <- 'Wind Speed'
-
-ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
-  ggplot2::ylim(ws_ylims) +
-  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
-  ggplot2::geom_line(ggplot2::aes(y = wind_speed), color = 'black') +
-  ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_speed_obs), color = 'red') +
-  ggplot2::geom_vline(aes(xintercept = forecast_start_day),
-                      alpha = 1, linetype = "dashed") +
-  ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Past', geom = 'text') +
-  ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Future', geom = 'text') +
-  ggplot2::theme_light() +
-  ggplot2::scale_linetype_manual(name = "",
-                                 values = c('solid'),
-                                 labels = c('Forecast Date')) +
-  ggplot2::scale_y_continuous(name = var_unit,
-                              limits = ws_ylims) +
-  ggplot2::labs(x = "Date",
-                y = var_unit,
-                title = paste0(var_title," Forecast", lubridate::date(full_met_data_df$forecast_start_day))) +#,
-  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
-                 plot.title = element_text(hjust = 0.5))
-
-ws_plot
+```{# {r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# 
+# ## MAKE PLOTS
+# forecast_start_day <- most_recent
+# historical_horizon <- 10
+# 
+# ## wind speed 
+# ws_ylims <- c(0,40)
+# var_unit <- 'Wind Speed (km/hr)'
+# var_title <- 'Wind Speed'
+# 
+# ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+#   ggplot2::ylim(ws_ylims) +
+#   ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+#   ggplot2::geom_line(ggplot2::aes(y = wind_speed), color = 'black') +
+#   ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_speed_obs), color = 'red') +
+#   ggplot2::geom_vline(aes(xintercept = forecast_start_day),
+#                       alpha = 1, linetype = "dashed") +
+#   ggplot2::annotate(x = (forecast_start_day - lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Past', geom = 'text') +
+#   ggplot2::annotate(x = (forecast_start_day + lubridate::days(3)), y = max(ws_ylims) - 1, label = 'Future', geom = 'text') +
+#   ggplot2::theme_light() +
+#   ggplot2::scale_linetype_manual(name = "",
+#                                  values = c('solid'),
+#                                  labels = c('Forecast Date')) +
+#   ggplot2::scale_y_continuous(name = var_unit,
+#                               limits = ws_ylims) +
+#   ggplot2::labs(x = "Date",
+#                 y = var_unit,
+#                 title = paste0(var_title," Forecast", lubridate::date(full_met_data_df$forecast_start_day))) +#,
+#   ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+#                  plot.title = element_text(hjust = 0.5))
+# 
+# ws_plot
 
 ```
 
@@ -350,8 +349,8 @@ at_plot
 #)
 
 ```
-<br />
-<br />
+
+<br /> <br />
 
 ```{r}
 
@@ -373,4 +372,3 @@ at_plot
 #  ggplot2::theme(plot.title = element_text(hjust = 0.5))
   
 ```
-
