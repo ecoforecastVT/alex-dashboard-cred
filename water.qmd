@@ -2,9 +2,7 @@
 title: Water Quality Forecasts
 ---
 
-This page contains information about the water quality of Lake Alexandrina
-<br />
-<br />
+This page contains information about the water quality of Lake Alexandrina <br /> <br />
 
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
@@ -12,7 +10,8 @@ library(arrow)
 source('./R/dashboard_plotting_tool.R')
 ```
 
-## Water Temperature Forecast 
+## Water Temperature Forecast
+
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
@@ -27,30 +26,32 @@ most_recent <-  arrow::open_dataset(s3_score) |>
 
 source('R/alex_target_generation.R')
 
-obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+obs_df <- arrow::open_csv_dataset(s3_targets) |> 
+  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
   # filter(datetime <= obs_dates_grab,
   #        datetime <= most_recent) |> 
-  filter(variable == 'temperature') |> 
+  filter(variable == 'temperature',
+         datetime <= most_recent) |> 
   #select(datetime, observation) |> 
-  #collect() |> 
-  mutate(reference_datetime = most_recent)
+  collect() #|> 
+  #mutate(reference_datetime = most_recent)
 
 score_df <- arrow::open_dataset(s3_score) |>
   filter(variable == "temperature",
          depth %in% c(0.5),
          site_id %in% site,
          horizon >= 0,
-         reference_datetime == most_recent) |>
+         #reference_datetime == as.Date('1-05-25')) |> 
+         reference_datetime == (most_recent)) |>
   dplyr::collect()
 
 dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(10,30), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
 
 ```
 
-<br />
-<br />
+<br /> <br />
 
-## Salinity Forecast 
+## Salinity Forecast
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 ## SALT PLOT 
@@ -73,10 +74,10 @@ score_df <- arrow::open_dataset(s3_score) |>
 dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0,1), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
 
 ```
-<br />
-<br />
 
-## Lake Depth Forecast 
+<br /> <br />
+
+## Lake Depth Forecast
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 ## Depth PLOT 
