@@ -45,12 +45,6 @@ jobs:
         run: |
           quarto render
 
-      - name: Build site map
-        shell: Rscript {0}
-        run: |
-         install.packages("RCurl")
-         source("build_site_map.R")
-
       - name: Publish
         run: |
           git config user.name github-actions
