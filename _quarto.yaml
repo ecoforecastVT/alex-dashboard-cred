@@ -5,7 +5,7 @@ project:
 website:
   title: "Lake Alexandrina Dashboard"
   page-navigation: true
-  repo-url: https://github.com/addelany/ALEX-dashboard
+  repo-url: https://github.com/flare-forecast/alex-dashboard
   repo-actions: [source, issue]
 
   navbar:
@@ -28,7 +28,7 @@ website:
     left: "CC-BY"
     right:
       - icon: github
-        href: https://github.com/addelany/ALEX-dashboard
+        href: https://github.com/FLARE-forecast/alex-dashboard
 
 format:
   html:
