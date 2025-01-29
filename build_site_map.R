@@ -13,9 +13,9 @@ tpl <- '<?xml version="1.0" encoding="UTF-8"?>
  {{/links}}
 </urlset>'
 
-links <- c(paste0('https://flare-forecast.org/alex-dashboard', "/water.html"),
-           paste0('https://flare-forecast.org/alex-dashboard', "/weather.html"),
-           paste0('https://flare-forecast.org/alex-dashboard', "/index.html"))
+links <- c(paste0('https://flare-forecast.org/alex-dashboard', "/index.html"),
+           paste0('https://flare-forecast.org/alex-dashboard', "/water.html"),
+           paste0('https://flare-forecast.org/alex-dashboard', "/weather.html"))
 
 map_links <- function(l) {
   tmp <- httr::GET(l)
