@@ -4,6 +4,7 @@ title: Water Quality Forecasts
 
 This page contains information about the water quality of Lake Alexandrina <br /> <br />
 
+Disclaimer: The data provided on this page is experimental.
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
 library(arrow)
@@ -26,15 +27,20 @@ most_recent <-  arrow::open_dataset(s3_score) |>
 
 source('R/alex_target_generation.R')
 
-obs_df <- arrow::open_csv_dataset(s3_targets) |> 
-  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
-  # filter(datetime <= obs_dates_grab,
-  #        datetime <= most_recent) |> 
+obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
   filter(variable == 'temperature',
          datetime <= most_recent) |> 
-  #select(datetime, observation) |> 
-  collect() #|> 
-  #mutate(reference_datetime = most_recent)
+  collect()
+
+# obs_df <- arrow::open_csv_dataset(s3_targets) |> 
+#   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
+#   # filter(datetime <= obs_dates_grab,
+#   #        datetime <= most_recent) |> 
+#   filter(variable == 'temperature',
+#          datetime <= most_recent) |> 
+#   #select(datetime, observation) |> 
+#   collect() #|> 
+#   #mutate(reference_datetime = most_recent)
 
 score_df <- arrow::open_dataset(s3_score) |>
   filter(variable == "temperature",
@@ -45,7 +51,21 @@ score_df <- arrow::open_dataset(s3_score) |>
          reference_datetime == (most_recent)) |>
   dplyr::collect()
 
-dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(10,30), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
+
+historical_horizon <- 30 
+historical_reference_datetime <- most_recent - days(historical_horizon)
+
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+    filter(variable == "temperature",
+         depth %in% c(0.5),
+         site_id %in% site,
+         horizon == 0,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent) |> 
+  collect()
+  
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(10,30), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
@@ -59,6 +79,7 @@ obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |>
   # filter(datetime <= obs_dates_grab,
   #        datetime <= most_recent) |> 
   filter(variable == 'salt') |> 
+  #filter(datetime >= historical_reference_datetime) |> 
   #select(datetime, observation) |> 
   collect() |> 
   mutate(reference_datetime = most_recent)
@@ -71,7 +92,17 @@ score_df <- arrow::open_dataset(s3_score) |>
          reference_datetime == most_recent) |>
   dplyr::collect()
 
-dashboard_plotting_tool(data = score_df, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0,1), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+    filter(variable == "salt",
+         depth %in% c(0.5),
+         site_id %in% site,
+         horizon == 0,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent) |> 
+  collect()
+  
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0,1), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
@@ -96,5 +127,13 @@ score_df <- arrow::open_dataset(s3_score) |>
          reference_datetime == most_recent) |>
   dplyr::collect()
 
-dashboard_plotting_tool(data = score_df, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,10), site_name = site, obs_hist = obs_df, historical_horizon = 30, forecast_horizon_confidence = 10)
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+    filter(variable == "depth",
+         site_id %in% site,
+         horizon == 0,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent) |> 
+  collect()
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,10), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```

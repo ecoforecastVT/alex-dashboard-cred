@@ -4,6 +4,10 @@ title: Weather Forecasts
 
 This page contains information about weather in the Lake Alexandrina area
 
+<br /> <br />
+
+Disclaimer: The data provided on this page is experimental.
+
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(arrow)
