@@ -3,6 +3,8 @@ title: "Current Conditions"
 ---
 
 Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)).
+<br /> <br />
+Disclaimer: The data provided on this page is experimental.
 
 ## Current Conditions for Lake Alexandrina
 
@@ -99,4 +101,17 @@ layout_column_wrap(
 
 ```
 
-<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant DEB-2327030. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> Page last updated on `r Sys.Date()`
+
+## Where is this data coming from?
+
+```{r fig.height=5, fig.width=5, echo=FALSE, include=TRUE, message = FALSE}
+leaflet() %>%
+  setView(lat = -35.4391, lng = 139.1512, zoom= 9) %>%
+  addTiles(group="OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group="Imagery") %>%
+  addProviderTiles(providers$Esri.WorldTopoMap, group="Topo Map") %>%
+  addLayersControl(baseGroups=c('Imagery','OSM', 'Topo Map')) #|> 
+  #addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner), clusterOptions = markerClusterOptions())
+```
+
+<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> Page last updated on `r Sys.Date()`
