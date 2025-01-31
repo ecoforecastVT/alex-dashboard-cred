@@ -105,13 +105,15 @@ layout_column_wrap(
 ## Where is this data coming from?
 
 ```{r fig.height=5, fig.width=5, echo=FALSE, include=TRUE, message = FALSE}
+sites <- suppressMessages(sf::st_read("sites.json"))
+
 leaflet() %>%
   setView(lat = -35.4391, lng = 139.1512, zoom= 9) %>%
   addTiles(group="OSM") %>%
   addProviderTiles(providers$Esri.WorldImagery, group="Imagery") %>%
   addProviderTiles(providers$Esri.WorldTopoMap, group="Topo Map") %>%
-  addLayersControl(baseGroups=c('Imagery','OSM', 'Topo Map')) #|> 
-  #addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner), clusterOptions = markerClusterOptions())
+  addLayersControl(baseGroups=c('Imagery','OSM', 'Topo Map')) |> 
+  addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner))#, clusterOptions = markerClusterOptions())
 ```
 
 <br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> Page last updated on `r Sys.Date()`
