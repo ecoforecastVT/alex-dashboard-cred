@@ -101,11 +101,15 @@ layout_column_wrap(
 
 ## Where is this data coming from?
 
-```{r fig.height=5, fig.width=5, echo=FALSE, include=TRUE, message = FALSE}
+```{r, include=FALSE}
 sites <- suppressMessages(sf::st_read("sites.json"))
+```
+
+```{r fig.height=5, fig.width=5, echo=FALSE, include=TRUE, message = FALSE}
+#sites <- suppressMessages(sf::st_read("sites.json"))
 
 leaflet() %>%
-  setView(lat = -35.4391, lng = 139.1512, zoom= 10) %>%
+  setView(lat = -35.4391, lng = 139.1512, zoom= 11) %>%
   addTiles(group="OSM") %>%
   addProviderTiles(providers$Esri.WorldImagery, group="Imagery") %>%
   addProviderTiles(providers$Esri.WorldTopoMap, group="Topo Map") %>%
