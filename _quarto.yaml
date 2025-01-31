@@ -12,9 +12,6 @@ website:
     background: primary
     search: true
     left:
-      - href: https://flare-forecast.org/
-        text: Home
-        icon: house-door
       - href: index.qmd
         icon: info-square
       - href: water.qmd
