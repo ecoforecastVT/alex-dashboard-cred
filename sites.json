@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "ALEX",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "site_id": "Water Quality Data Site (Beacon 97)","Partner": "SA Water", "n": 5 }, "geometry": { "type": "Point", "coordinates": [ 139.1381,-35.4863 ] } },
+{ "type": "Feature", "properties": { "site_id": "Meteorology Data Site (Pelican Point)", "Partner": "SA Water","n": 5 }, "geometry": { "type": "Point", "coordinates": [ 139.0267, -35.5973 ] } }
+]
+}
