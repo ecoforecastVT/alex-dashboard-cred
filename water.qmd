@@ -4,7 +4,10 @@ title: Water Quality Forecasts
 
 This page contains information about the water quality of Lake Alexandrina <br /> <br />
 
-Disclaimer: The data provided on this page is experimental.
+Disclaimer: The data provided on this page is experimental.<br /> <br />
+
+All forecasts are valid for 10:30am ACDT.
+
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
 library(arrow)
@@ -59,7 +62,7 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
     filter(variable == "temperature",
          depth %in% c(0.5),
          site_id %in% site,
-         horizon == 0,
+         horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent) |> 
   collect()
@@ -96,7 +99,7 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
     filter(variable == "salt",
          depth %in% c(0.5),
          site_id %in% site,
-         horizon == 0,
+         horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent) |> 
   collect()
@@ -130,7 +133,7 @@ score_df <- arrow::open_dataset(s3_score) |>
 score_df_historic <- arrow::open_dataset(s3_score) |> 
     filter(variable == "depth",
          site_id %in% site,
-         horizon == 0,
+         horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent) |> 
   collect()

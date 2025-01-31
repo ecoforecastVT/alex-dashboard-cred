@@ -6,7 +6,9 @@ This page contains information about weather in the Lake Alexandrina area
 
 <br /> <br />
 
-Disclaimer: The data provided on this page is experimental.
+Disclaimer: The data provided on this page is experimental.<br /> <br />
+
+All forecasts are valid for 10:30am ACDT.
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -103,18 +105,18 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
-
-if (!dir.exists(file.path(lake_directory,'data_raw'))){
-  dir.create(file.path(lake_directory,'data_raw'))
-}
-
-# download wind velocity
-download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Vel.Best%20Available--Continuous%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=185&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733427930976"),
-              destfile = file.path(lake_directory,"data_raw","wind_velocity_obs.csv"))
-
-# download wind direction
-download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Dir.Telem%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=52&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733428211983"),
-              destfile = file.path(lake_directory,"data_raw","wind_direction_obs.csv"))
+# 
+# if (!dir.exists(file.path(lake_directory,'data_raw'))){
+#   dir.create(file.path(lake_directory,'data_raw'))
+# }
+# 
+# # download wind velocity
+# download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Vel.Best%20Available--Continuous%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=185&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733427930976"),
+#               destfile = file.path(lake_directory,"data_raw","wind_velocity_obs.csv"))
+# 
+# # download wind direction
+# download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=Wind%20Dir.Telem%40A4260603&Calendar=CALENDARYEAR&DateRange=Days30&UnitID=52&Conversion=Instantaneous&IntervalPoints=PointsAsRecorded&ApprovalLevels=False&Qualifiers=False&Step=1&ExportFormat=csv&Compressed=true&RoundData=True&GradeCodes=True&InterpolationTypes=False&Timezone=9.5&_=1733428211983"),
+#               destfile = file.path(lake_directory,"data_raw","wind_direction_obs.csv"))
 
 
 ## NOAA FUTURE DATA READ IN ABOVE
@@ -127,7 +129,7 @@ historical_date_cutoff <- noaa_date - lubridate::days(10)
 
 noaa_historical_df <- arrow::open_dataset(noaa_historical_s3) |> 
   filter(variable %in% c('air_temperature','northward_wind','eastward_wind'),
-         datetime <= noaa_date, 
+         #datetime <= noaa_date, 
          datetime > historical_date_cutoff) |> 
   collect()
 
@@ -154,10 +156,9 @@ historical_met_df_em_avg <- noaa_historical_df |>
 
 ## READ IN WIND OBSERVATIONS
 
-wind_dir_obs <- read_csv('data_raw/wind_direction_obs.csv', skip=1) |> 
-  rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (deg)`, code = `Grade Code`) |> 
-  filter(datetime > (historical_date_cutoff), 
-         datetime <= noaa_date) |> 
+wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+  filter(datetime > (historical_date_cutoff)) |> #, 
+         #datetime <= noaa_date) |> 
   mutate(date = as.Date(datetime),
          hour = lubridate::hour(datetime)) |> 
   group_by(date, hour) |> 
@@ -167,10 +168,9 @@ wind_dir_obs <- read_csv('data_raw/wind_direction_obs.csv', skip=1) |>
          datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
   select(datetime, wind_deg_obs)
 
-wind_velocity_obs <- read_csv('data_raw/wind_velocity_obs.csv',skip=1) |> 
-  rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (m/s)`, code = `Grade Code`) |> 
-  filter(datetime > (historical_date_cutoff), 
-         datetime < noaa_date) |>
+wind_velocity_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
+  filter(datetime > (historical_date_cutoff)) |> #, 
+         #datetime < noaa_date) |>
   mutate(date = as.Date(datetime),
          hour = lubridate::hour(datetime)) |> 
   group_by(date, hour) |> 
@@ -194,15 +194,16 @@ future_met_df_em_avg$wind_speed_obs <- NA
 
 full_met_data_df <- dplyr::bind_rows(historical_met_df, future_met_df_em_avg) |> 
 mutate(wind_speed = wind_speed*3.6,
-wind_speed_obs = wind_speed_obs * 3.6) # convert wind to km/hr
-
+wind_speed_obs = wind_speed_obs * 3.6, 
+date = as.Date(datetime))  |> # convert wind to km/hr
+filter(!(date == noaa_date & is.na(wind_deg_obs)))
 ```
 
 ```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 
 ## MAKE PLOTS
 forecast_start_day <- most_recent
-historical_horizon <- 10
+historical_horizon <- 3
 
 ## wind speed 
 ws_ylims <- c(0,40)
@@ -211,7 +212,7 @@ var_title <- 'Wind Speed'
 
 ws_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
   ggplot2::ylim(ws_ylims) +
-  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), forecast_start_day + lubridate::days(historical_horizon)) +
   ggplot2::geom_line(ggplot2::aes(y = wind_speed), color = 'black') +
   ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_speed_obs), color = 'red') +
   ggplot2::geom_vline(aes(xintercept = forecast_start_day),
@@ -243,7 +244,7 @@ var_title <- 'Wind Direction'
 
 wd_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
   ggplot2::ylim(wd_ylims) +
-  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), forecast_start_day + lubridate::days(historical_horizon)) +
   ggplot2::geom_line(ggplot2::aes(y = wind_deg), color = 'black') +
   ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
   ggplot2::geom_vline(aes(xintercept = forecast_start_day),
@@ -311,7 +312,7 @@ at_var_unit = 'Temperature (°C)'
 
 at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
   ggplot2::ylim(at_ylims) +
-  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), (max(full_met_data_df$datetime)) + lubridate::days(5)) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), forecast_start_day + lubridate::days(historical_horizon)) +
   ggplot2::geom_line(ggplot2::aes(y = air_temp), color = 'black') +
   #ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
   ggplot2::geom_vline(aes(xintercept = forecast_start_day),
