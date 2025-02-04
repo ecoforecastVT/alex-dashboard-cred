@@ -31,9 +31,9 @@ readr::read_csv(file.path(lake_directory, "data_raw/current_insitu.csv"),
   pivot_longer(names_to = 'variable', names_prefix = 'Value_',
                cols = starts_with('Value'),
                values_to = 'observed') |>
-  mutate(time = lubridate::force_tz(time, tzone = "Etc/GMT+9"),
-         time = time - lubridate::minutes(30),
-         time = lubridate::with_tz(time, tzone = "UTC"),
+  mutate(time = lubridate::force_tz(time, tzone = "Australia/Adelaide"),
+         #time = time - lubridate::minutes(30),
+         #time = lubridate::with_tz(time, tzone = "UTC"),
          date = lubridate::as_date(time),
          hour = lubridate::hour(time)) |>
   group_by(date, hour, variable) |>
@@ -54,6 +54,7 @@ download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=
 
 wind_velocity_obs <- read_csv('data_raw/wind_velocity_obs.csv',skip=1) |> 
   rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (m/s)`, code = `Grade Code`) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   write_csv(file.path(lake_directory,'targets/',paste0("ALEX_wind_speed_targets.csv")))
 
 
@@ -63,4 +64,5 @@ download.file(url = paste0("https://water.data.sa.gov.au/Export/DataSet?DataSet=
 
 wind_dir <- read_csv('data_raw/wind_direction_obs.csv', skip=1) |> 
   rename(datetime = `Timestamp (UTC+09:30)`, value = `Value (deg)`, code = `Grade Code`) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>
   write_csv(file.path(lake_directory,'targets/',paste0("ALEX_wind_dir_targets.csv")))
