@@ -73,6 +73,63 @@ current_depth <- obs_cleaned |>
 last_updated <- Sys.Date()
 ```
 
+
+```{r, include=FALSE}
+## make current condition information for wind 
+## use average wind conditions for last six hours?
+
+most_recent_wind <- wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  filter(row_number() == n()) |> 
+  pull(datetime)
+
+wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
+  mutate(wind_hour = lubridate::hour(datetime)) |> 
+  group_by(wind_hour) |> 
+  summarise(wind_dir_mean_hour = mean(value, na.rm = TRUE)) #|> 
+  #ungroup() |>
+  #summarise(wind_dir_mean = mean(wind_dir_mean_hour))
+
+wind_speed_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
+  mutate(wind_hour = lubridate::hour(datetime)) |> 
+  group_by(wind_hour) |> 
+  summarise(wind_speed_mean_hour = mean(value, na.rm = TRUE)*3.6) #|> 
+  #ungroup() |>
+  #summarise(wind_speed_mean = (mean(wind_speed_mean_hour)*3.6)) ## m/s -> km-hr
+
+# wind_df <- data.frame(wind_dir = wind_dir_obs$wind_dir_mean_hour, wind_speed = wind_speed_obs$wind_speed_mean_hour)
+
+wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  filter(datetime > (most_recent_wind - lubridate::hours(6))) |> 
+  mutate(wind_minute = lubridate::minute(datetime)) |> 
+  filter(wind_minute == 0)
+
+wind_df <- data.frame(datetime = wind_dates$datetime,
+                      wind_dir = wind_dir_obs$wind_dir_mean_hour, 
+                      wind_speed = wind_speed_obs$wind_speed_mean_hour)
+```
+
+```{r, include=TRUE}
+plot(wind_df$datetime, wind_df$wind_speed, ylim = c(0,15))
+Arrowhead(x0 = wind_df$datetime, 
+          y0 = wind_df$wind_speed, 
+          angle = wind_df$wind_dir, 
+          arr.type = 'triangle',
+          lty = 1)
+
+# arrows(x0 = wind_df$datetime, 
+#        y0 = wind_df$wind_speed, 
+#        x1 = wind_df$datetime+1, 
+#        y1 = wind_df$wind_speed+1,
+#        angle = wind_df$wind_dir)
+
+```
+
 ```{r}
 
 layout_column_wrap(
