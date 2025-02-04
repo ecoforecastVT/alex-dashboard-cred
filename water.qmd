@@ -6,7 +6,7 @@ This page contains information about the water quality of Lake Alexandrina <br /
 
 Disclaimer: The data provided on this page is experimental.<br /> <br />
 
-All forecasts are valid for 10:30am ACDT.
+All forecasts are valid for 10:30am ACDT. Red dots indicate in-situ observations. The black line indicates the mean forecast predictions (both past and future), with uncertainty provided for future forecasts. Uncertainty is separated into sections of higher confidence (blue) and lower confidence (grey) based on predicted days ahead. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
 
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
@@ -23,7 +23,8 @@ s3_targets <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/targets/ALEX",
 site <- 'ALEX'
 
 most_recent <-  arrow::open_dataset(s3_score) |> 
-  filter(site_id %in% c("ALEX")) |> 
+  filter(site_id %in% c("ALEX"), 
+         model_id == 'glm_flare_v3') |>
   summarize(max = max(reference_datetime)) |> 
   collect() |> 
   pull()
@@ -51,7 +52,8 @@ score_df <- arrow::open_dataset(s3_score) |>
          site_id %in% site,
          horizon >= 0,
          #reference_datetime == as.Date('1-05-25')) |> 
-         reference_datetime == (most_recent)) |>
+         reference_datetime == (most_recent),
+         model_id == 'glm_flare_v3') |>
   dplyr::collect()
 
 
@@ -64,7 +66,8 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          site_id %in% site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
-         reference_datetime < most_recent) |> 
+         reference_datetime < most_recent,
+         model_id == 'glm_flare_v3') |> 
   collect()
   
 
@@ -92,7 +95,8 @@ score_df <- arrow::open_dataset(s3_score) |>
          depth %in% c(0.5),
          site_id %in% site,
          horizon >= 0,
-         reference_datetime == most_recent) |>
+         reference_datetime == most_recent,
+         model_id == 'glm_flare_v3') |>
   dplyr::collect()
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
@@ -101,7 +105,8 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          site_id %in% site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
-         reference_datetime < most_recent) |> 
+         reference_datetime < most_recent,
+         model_id == 'glm_flare_v3') |> 
   collect()
   
 
@@ -127,7 +132,8 @@ score_df <- arrow::open_dataset(s3_score) |>
   filter(variable == "depth",
          site_id %in% site,
          horizon >= 0,
-         reference_datetime == most_recent) |>
+         reference_datetime == most_recent,
+         model_id == 'glm_flare_v3') |>
   dplyr::collect()
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
@@ -135,7 +141,8 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          site_id %in% site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
-         reference_datetime < most_recent) |> 
+         reference_datetime < most_recent,
+         model_id == 'glm_flare_v3') |> 
   collect()
 
 dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,10), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
