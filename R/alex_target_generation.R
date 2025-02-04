@@ -10,7 +10,7 @@ if (!dir.exists(file.path(lake_directory,'data_raw'))){
   dir.create(file.path(lake_directory,'data_raw'))
 }
 
-download.file(url = paste0("https://water.data.sa.gov.au/Export/BulkExport?DateRange=Custom&StartTime=2020-01-01%2000%3A00&EndTime=", Sys.Date(), "%2000%3A00&TimeZone=0&Calendar=CALENDARYEAR&Interval=PointsAsRecorded&Step=1&ExportFormat=csv&TimeAligned=True&RoundData=True&IncludeGradeCodes=False&IncludeApprovalLevels=False&IncludeQualifiers=False&IncludeInterpolationTypes=False&Datasets[0].DatasetName=Lake%20Level.Best%20Available--Continuous%40A4261133&Datasets[0].Calculation=Instantaneous&Datasets[0].UnitId=82&Datasets[1].DatasetName=EC%20Corr.Best%20Available%40A4261133&Datasets[1].Calculation=Instantaneous&Datasets[1].UnitId=305&Datasets[2].DatasetName=Water%20Temp.Best%20Available--Continuous%40A4261133&Datasets[2].Calculation=Instantaneous&Datasets[2].UnitId=169&_=1711554907800"),
+download.file(url = paste0("https://water.data.sa.gov.au/Export/BulkExport?DateRange=Custom&StartTime=2020-01-01%2000%3A00&EndTime=", Sys.Date()+1, "%2000%3A00&TimeZone=0&Calendar=CALENDARYEAR&Interval=PointsAsRecorded&Step=1&ExportFormat=csv&TimeAligned=True&RoundData=True&IncludeGradeCodes=False&IncludeApprovalLevels=False&IncludeQualifiers=False&IncludeInterpolationTypes=False&Datasets[0].DatasetName=Lake%20Level.Best%20Available--Continuous%40A4261133&Datasets[0].Calculation=Instantaneous&Datasets[0].UnitId=82&Datasets[1].DatasetName=EC%20Corr.Best%20Available%40A4261133&Datasets[1].Calculation=Instantaneous&Datasets[1].UnitId=305&Datasets[2].DatasetName=Water%20Temp.Best%20Available--Continuous%40A4261133&Datasets[2].Calculation=Instantaneous&Datasets[2].UnitId=169&_=1711554907800"),
               destfile = file.path(lake_directory, "data_raw", "current_insitu.csv"))
 
 if (!dir.exists(file.path(lake_directory,'targets'))){
@@ -26,7 +26,7 @@ readr::read_csv(file.path(lake_directory, "data_raw/current_insitu.csv"),
   mutate(Value_salt = oce::swSCTp(conductivity = Value_EC/1000,
                                   temperature = Value_temperature,
                                   conductivityUnit = 'mS/cm'),
-         Value_depth = 5.3 + Value_level) |> # 5.3 is the height
+         Value_depth = Value_level) |> # 5.3 is the height
   select(-Value_EC, -Value_level) |>
   pivot_longer(names_to = 'variable', names_prefix = 'Value_',
                cols = starts_with('Value'),

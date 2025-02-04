@@ -134,15 +134,19 @@ score_df <- arrow::open_dataset(s3_score) |>
          horizon >= 0,
          reference_datetime == most_recent,
          model_id == 'glm_flare_v3') |>
+  mutate(mean = mean - 5.3,
+         forecast_lower_90 = forecast_lower_90 - 5.3,
+         forecast_upper_90 = forecast_upper_90 - 5.3) |> # calculate AHD (5.3 maxdepth)
   dplyr::collect()
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
-    filter(variable == "depth",
+  filter(variable == "depth",
          site_id %in% site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent,
          model_id == 'glm_flare_v3') |> 
+  mutate(mean = mean - 5.3) |> # calculate AHD (5.3 maxdepth)
   collect()
 
 dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,10), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)

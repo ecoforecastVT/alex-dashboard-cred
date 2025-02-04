@@ -15,7 +15,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     label_height_adjust <- 0.01
   } else if(data_var == 'depth'){
     var_title = 'Lake Depth'
-    var_unit = 'Depth (m)' 
+    var_unit = 'Depth (AHD)' 
     label_height_adjust <- 0.5
   } else{
     var_title = 'Water Quality Variable'
@@ -69,6 +69,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     pull(doy)
   
   obs_climatology <- obs_hist |> 
+    mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
     mutate(doy = lubridate::yday(datetime)) |> 
     filter(doy %in% interest_days_doy) |> 
     # mutate(climatology_average = mean(observation, na.rm = TRUE)) |> 
