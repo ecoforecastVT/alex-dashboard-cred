@@ -78,13 +78,13 @@ last_updated <- Sys.Date()
 ## make current condition information for wind 
 ## use average wind conditions for last six hours?
 
-most_recent_wind <- wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+most_recent_wind <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(row_number() == n()) |> 
   pull(datetime)
 
 wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
   group_by(wind_hour) |> 
@@ -93,7 +93,7 @@ wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |>
   #summarise(wind_dir_mean = mean(wind_dir_mean_hour))
 
 wind_speed_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
-  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
   group_by(wind_hour) |> 
@@ -112,22 +112,6 @@ wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |>
 wind_df <- data.frame(datetime = wind_dates$datetime,
                       wind_dir = wind_dir_obs$wind_dir_mean_hour, 
                       wind_speed = wind_speed_obs$wind_speed_mean_hour)
-```
-
-```{r, include=TRUE}
-plot(wind_df$datetime, wind_df$wind_speed, ylim = c(0,15))
-Arrowhead(x0 = wind_df$datetime, 
-          y0 = wind_df$wind_speed, 
-          angle = wind_df$wind_dir, 
-          arr.type = 'triangle',
-          lty = 1)
-
-# arrows(x0 = wind_df$datetime, 
-#        y0 = wind_df$wind_speed, 
-#        x1 = wind_df$datetime+1, 
-#        y1 = wind_df$wind_speed+1,
-#        angle = wind_df$wind_dir)
-
 ```
 
 ```{r}
