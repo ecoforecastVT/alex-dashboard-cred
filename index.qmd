@@ -104,7 +104,7 @@ wind_speed_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |>
 # wind_df <- data.frame(wind_dir = wind_dir_obs$wind_dir_mean_hour, wind_speed = wind_speed_obs$wind_speed_mean_hour)
 
 wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(datetime > (most_recent_wind - lubridate::hours(6))) |> 
   mutate(wind_minute = lubridate::minute(datetime)) |> 
   filter(wind_minute == 0)
