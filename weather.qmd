@@ -73,7 +73,6 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
   select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
 ```
 
-<br />
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
@@ -178,6 +177,7 @@ filter(!(date == noaa_date & is.na(wind_deg_obs)))
 
 ## Wind Forecast with Historical Observations
 
+<br />
 ```{r, include=TRUE}
 # make wind plot with arrows 
 
@@ -335,6 +335,7 @@ var_title <- 'Wind Direction'
 
 ```
 
+## Air Temperature Forecast with Historical Forecast
 
 ```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -387,8 +388,6 @@ at_plot
 #)
 
 ```
-
-<br /> <br />
 
 ```{r}
 
