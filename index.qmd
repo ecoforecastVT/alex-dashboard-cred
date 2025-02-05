@@ -148,6 +148,8 @@ layout_column_wrap(
 
 ```
 
+<br /> 
+
 ## Average Wind Conditions for Lake Alexandrina (last 6 hours)
 
 ```{r}
