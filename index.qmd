@@ -130,7 +130,7 @@ layout_column_wrap(
     title = "Current Water Temperature", 
     value = current_temp,
     showcase = bs_icon("thermometer-half"),
-    theme_color = "success" 
+    theme_color = "primary" 
   ),
   value_box(
     title = "Current Salinity", 
@@ -157,7 +157,7 @@ layout_column_wrap(
     title = "Average Wind Speed", 
     value = paste(round(wind_df$mean_wind_speed,2), ' km/hr'),
     showcase = bs_icon("cloud-fog2"),
-    theme_color = "success" 
+    theme_color = "primary" 
   ),
   value_box(
     title = "Average Wind Direction", 
