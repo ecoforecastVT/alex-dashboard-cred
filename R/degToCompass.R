@@ -111,5 +111,5 @@ compass_plot <- function(degrees) {
 }
 
 # Example use
-compass_plot(90)  # Plot pointing to 45 degrees
+compass_plot(40)  # Plot pointing to 45 degrees
 

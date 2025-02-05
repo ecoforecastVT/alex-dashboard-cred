@@ -83,10 +83,16 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     mutate(doy = lubridate::yday(date)) |> 
     right_join(obs_climatology, by = c('doy'))
   
+  if (as.Date(most_recent) - as.Date(min(combined_tibble$date)) < 10){
+    xlims <- c(as.Date(min(combined_tibble$date)) - 10 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
+    } else {
+    xlims <- c(as.Date(min(combined_tibble$date)), (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
+  }
+  
   if (num_depths > 1){
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
       ggplot2::ylim(ylims) +
-      ggplot2::xlim(c(as.Date(min(combined_tibble$date)), (as.Date(max(combined_tibble$date)) + lubridate::days(5)))) +
+      ggplot2::xlim(xlims) +
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = as.factor(depth)), size = 0.5) +
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90,
                                         fill = as.factor(depth)),
@@ -126,7 +132,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
       ggplot2::ylim(ylims) +
-      ggplot2::xlim(c(as.Date(min(combined_tibble$date)), (as.Date(max(combined_tibble$date)) + lubridate::days(5)))) +
+      ggplot2::xlim(xlims) +
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
       #ggplot2::geom_line(ggplot2::aes(y = climatology_average), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +

@@ -6,7 +6,7 @@ This page contains information about weather in the Lake Alexandrina area
 
 <br />
 
-Disclaimer: The data provided on this page is experimental.<br /> <br />
+Disclaimer: The data provided on this page is experimental.<br /> 
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -18,43 +18,12 @@ library(graphics)
 library(jpeg)
 
 source('R/wind_plot_dashboard.R')
+source('R/degToCompass.R')
 
 lake_directory <- getwd()
 options(timeout=300)
 
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
-
-degToCompass <- function(num){
-
-  arr = c("N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW")
-
-  val = as.numeric((num/22.5) + 0.5)
-  val_position <- val %% 16
-
-  
-  if (any(val > 16)){
-    val_over <- which(val > 16)
-    
-    for (i in val_over){
-      print(i)
-      val_position[i] <- 16 ## hard code the index to 16 (last value in the wind directions)
-      print(length(val_position[i]))
-    }
-  } 
-  
-  if (any(val < 1)){
-    val_under <- which(val < 1)
-    for (i in val_under){
-      print(i)
-      val_position[i] <- 1 ## hard code the index to 16 (last value in the wind directions)
-      print(length(val_position[i]))
-    }  
-    }
-  
-  wind_direction <- arr[val_position] 
-  
-  return(wind_direction)
-}
 
 s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 most_recent <-  arrow::open_dataset(s3_score) |> 
@@ -104,7 +73,7 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
   select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
 ```
 
-<br /> <br />
+<br />
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
@@ -207,6 +176,8 @@ date = as.Date(datetime))  |> # convert wind to km/hr
 filter(!(date == noaa_date & is.na(wind_deg_obs)))
 ```
 
+## Wind Forecast with Historical Observations
+
 ```{r, include=TRUE}
 # make wind plot with arrows 
 
@@ -230,6 +201,12 @@ compass <-readJPEG('./north_arrow_black.jpg')
 weather_time_match <- lubridate::with_tz(most_recent, tzone = "Australia/Adelaide") - 
   lubridate::hours(4) - lubridate::minutes(30)
 
+wind_plot_x_labels <- wind_plot_df |> 
+  mutate(hour = lubridate::hour(hour_group)) |> 
+  filter(hour == 0) |> 
+  distinct(hour_group) |> 
+  pull(hour_group)
+  
 plot(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, ylim = c(0,48), cex = 0.01,   xlab = "Date",
      ylab = "Wind Speed (km/hr)", xaxt = 'n')
 
@@ -239,7 +216,8 @@ grid(nx = NA,
      col = "gray", # Grid line color
      lwd = 1)
 
-axis(1, wind_plot_df$hour_group, format(wind_plot_df$hour_group, "%b %d"), cex.axis = .7)
+#axis(1, wind_plot_df$hour_group, format(wind_plot_df$hour_group, "%b %d"), cex.axis = .7)
+axis(1, at = wind_plot_x_labels, format(wind_plot_x_labels, "%b %d"))
 
 #horizontal axis
 # axis(2,
@@ -254,8 +232,8 @@ axis(1, wind_plot_df$hour_group, format(wind_plot_df$hour_group, "%b %d"), cex.a
 shape::Arrowhead(x0 = wind_plot_df$hour_group, 
           y0 = wind_plot_df$wind_speed_mean, 
           angle = wind_plot_df$wind_deg_mean, 
-          arr.length = 0.18,
-          arr.width = 0.1,
+          arr.length = 0.2,
+          arr.width = 0.12,
           arr.type = 'triangle',
           lty = 1,
           lcol = "black",
@@ -264,8 +242,8 @@ shape::Arrowhead(x0 = wind_plot_df$hour_group,
 shape::Arrowhead(x0 = wind_plot_df$hour_group, 
           y0 = wind_plot_df$wind_speed_mean_obs, 
           angle = wind_plot_df$wind_deg_mean_obs, 
-          arr.length = 0.18,
-          arr.width = 0.1,
+          arr.length = 0.2,
+          arr.width = 0.12,
           arr.type = 'triangle',
           lty = 1,
           lcol = "red",
@@ -282,6 +260,11 @@ rasterImage(compass,
             wind_plot_df$hour_group[length(wind_plot_df$hour_group)],
             48)
 
+legend(wind_plot_df$hour_group[1], 49.5, legend=c("Observations", "Predictions"),
+       col=c("red", "black"), lty=1:1, cex=0.75)
+
+text(weather_time_match + lubridate::hours(8), 47, 'Future', cex = 0.8)
+text(weather_time_match - lubridate::hours(6), 47, 'Past', cex = 0.8)
 ```
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
