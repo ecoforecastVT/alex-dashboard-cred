@@ -133,7 +133,7 @@ wind_df <- data.frame(datetime = wind_dates$datetime,
                       wind_dir = wind_dir_obs$wind_dir_mean_hour, 
                       wind_speed = wind_speed_obs$wind_speed_mean_hour) |> 
   summarise(mean_wind_deg = mean(wind_dir, na.rm = TRUE),
-         mean_wind_speed = mean(wind_speed, na.rm = TRUE) * 3.6) |> # convert to km/hr
+         mean_wind_speed = mean(wind_speed, na.rm = TRUE)) |> # convert to km/hr
   mutate(mean_wind_direction = degToCompass(mean_wind_deg)) #|> 
  # select(datetime, mean_wind_deg, mean_wind_speed, windmean_wind_direction)
 ```
