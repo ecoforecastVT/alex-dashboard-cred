@@ -14,7 +14,7 @@ library(leaflet)
 library(oce)
 
 ```
-![](vt_cef.jpg){fig-align="center"}{width=50%}
+![](vt_cef.jpg){fig-align="center"}{width=50}
 
 Disclaimer: The data provided on this page are experimental.
 
