@@ -2,9 +2,9 @@
 title: "Current Conditions"
 ---
 
-### Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)). <br /> <br /> 
+### Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)).
 
-```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, out.width= '250px', out.height= '175px'}
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 library(tidyverse)
 library(arrow)
@@ -95,6 +95,7 @@ site_updated <- Sys.Date()
 ```{r, include=FALSE}
 ## make current condition information for wind 
 ## use average wind conditions for last six hours?
+source('./R/degToCompass.R')
 
 most_recent_wind <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
@@ -105,37 +106,37 @@ wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |>
   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
-  group_by(wind_hour) |> 
-  summarise(wind_dir_mean_hour = mean(value, na.rm = TRUE)) #|> 
-  #ungroup() |>
-  #summarise(wind_dir_mean = mean(wind_dir_mean_hour))
+  group_by(wind_hour) |>  
+  summarise(wind_dir_mean_hour = mean(value, na.rm = TRUE)) |> 
+  ungroup() |>
+  summarise(wind_dir_mean = mean(wind_dir_mean_hour)) |> 
+  mutate(mean_wind_direction = degToCompass(wind_dir_mean))
 
 wind_speed_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
-  filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
+  filter(datetime >= (most_recent_wind - lubridate::hours(5))) |> 
+  filter(datetime <= most_recent_wind) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
   group_by(wind_hour) |> 
-  summarise(wind_speed_mean_hour = mean(value, na.rm = TRUE)*3.6) #|> 
-  #ungroup() |>
-  #summarise(wind_speed_mean = (mean(wind_speed_mean_hour)*3.6)) ## m/s -> km-hr
+  summarise(wind_speed_mean_hour = mean(value, na.rm = TRUE)*3.6) |> 
+  ungroup() |>
+  summarise(wind_speed_mean = (mean(wind_speed_mean_hour))) ## m/s -> km-hr
 
 # wind_df <- data.frame(wind_dir = wind_dir_obs$wind_dir_mean_hour, wind_speed = wind_speed_obs$wind_speed_mean_hour)
 
-wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
-  filter(datetime > (most_recent_wind - lubridate::hours(6))) |> 
-  mutate(wind_minute = lubridate::minute(datetime)) |> 
-  filter(wind_minute == 0)
+# wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+#   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+#   filter(datetime > (most_recent_wind - lubridate::hours(6))) |> 
+#   mutate(wind_minute = lubridate::minute(datetime)) |> 
+#   filter(wind_minute == 0)
 
-source('./R/degToCompass.R')
-
-wind_df <- data.frame(datetime = wind_dates$datetime,
-                      wind_dir = wind_dir_obs$wind_dir_mean_hour, 
-                      wind_speed = wind_speed_obs$wind_speed_mean_hour) |> 
-  summarise(mean_wind_deg = mean(wind_dir, na.rm = TRUE),
-         mean_wind_speed = mean(wind_speed, na.rm = TRUE)) |> # convert to km/hr
-  mutate(mean_wind_direction = degToCompass(mean_wind_deg)) #|> 
- # select(datetime, mean_wind_deg, mean_wind_speed, windmean_wind_direction)
+# wind_df <- data.frame(datetime = wind_dates$datetime,
+#                       wind_dir = wind_dir_obs$wind_dir_mean_hour, 
+#                       wind_speed = wind_speed_obs$wind_speed_mean_hour) |> 
+#   summarise(mean_wind_deg = mean(wind_dir, na.rm = TRUE),
+#          mean_wind_speed = mean(wind_speed, na.rm = TRUE)) |> # convert to km/hr
+#   mutate(mean_wind_direction = degToCompass(mean_wind_deg)) #|> 
+#  # select(datetime, mean_wind_deg, mean_wind_speed, windmean_wind_direction)
 ```
 
 ```{r}
@@ -173,13 +174,13 @@ layout_column_wrap(
   width = "250px",
   value_box(
     title = "Average Wind Speed", 
-    value = paste(round(wind_df$mean_wind_speed,2), ' km/hr'),
+    value = paste(round(wind_speed_obs$wind_speed_mean,2), ' km/hr'),
     showcase = bs_icon("cloud-fog2"),
     theme_color = "primary" 
   ),
   value_box(
     title = "Average Wind Direction", 
-    value = wind_df$mean_wind_direction,
+    value = wind_dir_obs$mean_wind_direction,
     showcase = bs_icon("compass"),
     theme_color = "primary"
   )
