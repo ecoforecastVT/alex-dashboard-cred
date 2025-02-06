@@ -1,12 +1,12 @@
 # Learn more
 
-See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the [Center for Ecosystem Forecasting] (https://ecoforecast.centers.vt.edu/) at Virginia Tech.
+See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the [Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/) at Virginia Tech.
 
 # Documentation for Lake Alexandrina Forecasts
 
 We provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
 
-We maintain and deploy the FLARE model framework to create our forecasts. More information on the FLARE project can be found [here] (https://flare-forecast.org/)
+We maintain and deploy the FLARE model framework to create our water quality forecasts. More information on the FLARE project can be found [here](https://flare-forecast.org/)
 
 ## Relevant Research from the Center for Ecosystem Forecasting
 

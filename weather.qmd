@@ -2,7 +2,7 @@
 title: Weather Forecasts
 ---
 
-This page contains information about weather in the Lake Alexandrina area
+This page contains information about weather in the Lake Alexandrina area. Observations are provided by [SA Water](https://www.sawater.com.au/), and weather forecasts are provided by the [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model.  
 
 <br />
 
