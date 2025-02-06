@@ -138,7 +138,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                     y = var_unit,
                     fill = 'Depth (m)',
                     color = 'Depth',
-                    title = paste0(site_name, ' ',var_title," Forecast, ", lubridate::date(most_recent))) +#,
+                    title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      plot.title = element_text(hjust = 0.5))
     
@@ -166,7 +166,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                                   limits = ylims) +
       ggplot2::labs(x = "Date",
                     y = var_unit,
-                    title = paste0(site_name, ' ',var_title," Forecast, ", lubridate::date(most_recent))) +
+                    title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       scale_colour_manual("", 
                           values = c("forecast_mean"="black", "climatology_average"="darkslategrey")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
