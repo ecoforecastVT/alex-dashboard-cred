@@ -264,6 +264,7 @@ legend(wind_plot_df$hour_group[1], 49.5, legend=c("Observations", "Predictions")
 
 text(weather_time_match + lubridate::hours(8), 47, 'Future', cex = 0.8)
 text(weather_time_match - lubridate::hours(6), 47, 'Past', cex = 0.8)
+title('3-day Ahead Forecast')
 ```
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
@@ -345,13 +346,13 @@ at_var_unit = 'Temperature (°C)'
 
 at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
   ggplot2::ylim(at_ylims) +
-  ggplot2::xlim(forecast_start_day - lubridate::days(historical_horizon), forecast_start_day + lubridate::days(historical_horizon)) +
+  ggplot2::xlim(forecast_start_day - lubridate::days(10), forecast_start_day + lubridate::days(14)) +
   ggplot2::geom_line(ggplot2::aes(y = air_temp), color = 'black') +
   #ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
   ggplot2::geom_vline(aes(xintercept = forecast_start_day),
                       alpha = 1, linetype = "dashed") +
-  ggplot2::annotate(x = (forecast_start_day - lubridate::days(1)), y = max(at_ylims) - 1, label = 'Past', geom = 'text') +
-  ggplot2::annotate(x = (forecast_start_day + lubridate::days(1)), y = max(at_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day - lubridate::days(2)), y = max(at_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (forecast_start_day + lubridate::days(2)), y = max(at_ylims) - 1, label = 'Future', geom = 'text') +
   ggplot2::theme_light() +
   ggplot2::scale_linetype_manual(name = "",
                                  values = c('solid'),
@@ -360,7 +361,7 @@ at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
                               limits = at_ylims) +
   ggplot2::labs(x = "Date",
                 y = at_var_unit,
-                title = paste0(at_var_title," Forecast")) +#,
+                title = paste0("14-day Ahead Forecast")) +#,
   ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                  plot.title = element_text(hjust = 0.5))
 
