@@ -206,6 +206,6 @@ leaflet() %>%
 
 <br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> 
 
-We would like to acknowledge [SA Water] (https://www.sawater.com.au/) for providing observational data for the forecasts presented on this dashboard. <br /> <br /> 
+We would like to acknowledge [SA Water](https://www.sawater.com.au/) for providing observational data for the forecasts presented on this dashboard. <br /> <br /> 
 
 Page last updated on `r Sys.Date()`
