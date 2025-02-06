@@ -6,7 +6,7 @@ This page contains information about the water quality of Lake Alexandrina <br /
 
 Disclaimer: The data provided on this page is experimental.<br /> <br />
 
-All forecasts are valid for 10:30am ACDT. Red dots indicate in-situ observations. The black line indicates the mean forecast predictions (both past and future), with uncertainty provided for future forecasts. Uncertainty is separated into sections of higher confidence (blue) and lower confidence (grey) based on predicted days ahead. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period. <br /> <br />
+All forecasts are valid for 10:30am ACDT (00:00 UTC). Red dots indicate in-situ observations. The black line indicates the mean forecast predictions (both past and future), with uncertainty provided for future forecasts. Uncertainty is separated into sections of higher confidence (blue) and lower confidence (grey) based on predicted days ahead. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period. <br /> <br />
 
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
@@ -151,5 +151,5 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          quantile90 = quantile90 - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
   collect()
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,3), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,2), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```
