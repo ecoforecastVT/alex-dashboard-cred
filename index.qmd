@@ -13,10 +13,8 @@ library(bsicons)
 library(leaflet)
 library(oce)
 
-## paste CEF logo
-knitr::include_graphics('vt_cef.jpg')
 ```
-
+![](vt_cef.jpg){fig-align="center"}
 
 Disclaimer: The data provided on this page are experimental.
 
