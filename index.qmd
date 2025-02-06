@@ -2,7 +2,7 @@
 title: "Current Conditions"
 ---
 
-Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)). <br /> <br /> 
+### Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)). <br /> <br /> 
 
 ```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
@@ -18,7 +18,7 @@ knitr::include_graphics('vt_cef.jpg')
 ```
 
 
-Disclaimer: The data provided on this page is experimental.
+Disclaimer: The data provided on this page are experimental.
 
 ## Current Water Conditions for Lake Alexandrina
 
@@ -204,4 +204,8 @@ leaflet() %>%
   addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner))#, clusterOptions = markerClusterOptions())
 ```
 
-<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> Page last updated on `r Sys.Date()`
+<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> 
+
+We would like to acknowledge [SA Water] (https://www.sawater.com.au/) for providing observational data for the forecasts presented on this dashboard. <br /> <br /> 
+
+Page last updated on `r Sys.Date()`
