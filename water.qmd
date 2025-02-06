@@ -32,8 +32,10 @@ most_recent <-  arrow::open_dataset(s3_score) |>
 source('R/alex_target_generation.R')
 
 obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  mutate(datetime = lubridate::with_tz(lubridate::as_datetime(datetime), 'Australia/Adelaide')) |> 
   filter(variable == 'temperature',
-         datetime <= most_recent) |> 
+         datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
+                                        'Australia/Adelaide')) |>
   collect()
 
 # obs_df <- arrow::open_csv_dataset(s3_targets) |> 
@@ -151,5 +153,5 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          quantile90 = quantile90 - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
   collect()
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,2), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,1.2), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```

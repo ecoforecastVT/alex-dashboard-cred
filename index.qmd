@@ -4,7 +4,7 @@ title: "Current Conditions"
 
 Welcome to the Lake Alexandrina dashboad, hosted by the Virginia Tech Center for Ecosystem Forecasting ([CEF](https://www.ecoforecast.centers.vt.edu/)). <br /> <br /> 
 
-```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 library(tidyverse)
 library(arrow)
@@ -155,7 +155,7 @@ layout_column_wrap(
     theme_color = "primary"
   ),
     value_box(
-    title = "Current Lake Height Above Sea Level", 
+    title = "Current Lake Height", 
     value = current_depth,
     showcase = bs_icon("moisture"),
     theme_color = "primary" 
