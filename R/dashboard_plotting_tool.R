@@ -16,7 +16,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   } else if(data_var == 'depth'){
     var_title = 'Lake Depth'
     var_unit = 'Depth (AHD)' 
-    label_height_adjust <- 0.5
+    label_height_adjust <- 0.1
   } else{
     var_title = 'Water Quality Variable'
     var_unit = 'Variable Unit'
@@ -46,7 +46,9 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
            observed = observation, forecast_start_day = reference_datetime)
   
   
-  combined_tibble <- dplyr::bind_rows(curr_tibble, historic_tibble) |> arrange(datetime)
+  combined_tibble <- dplyr::bind_rows(curr_tibble, historic_tibble) |> 
+    arrange(datetime, observed) |> 
+    distinct(date, .keep_all = TRUE)
   
   priority_date_cutoff <- lubridate::with_tz(as.Date(most_recent),tzone) + lubridate::days(forecast_horizon_confidence) ## how many days into the forecast do we think we are confident? ALEX we had said 10
 
@@ -63,13 +65,13 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   combined_tibble$secondary_dates <- secondary_forecast_dates
   
   
-  ## identify base values for time period using historical observations
+  ## identify climatology values for time period using historical observations
   interest_days_doy <- combined_tibble |> 
     mutate(doy = lubridate::yday(date)) |> 
     pull(doy)
   
   obs_climatology <- obs_hist |> 
-    mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+    mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
     mutate(doy = lubridate::yday(datetime)) |> 
     filter(doy %in% interest_days_doy) |> 
     # mutate(climatology_average = mean(observation, na.rm = TRUE)) |> 
@@ -85,9 +87,22 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   
   if (as.Date(most_recent) - as.Date(min(combined_tibble$date)) < 10){
     xlims <- c(as.Date(min(combined_tibble$date)) - 10 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
+    obs_hist <- obs_hist |> 
+      filter(datetime > min(combined_tibble$datetime) - lubridate::days(10)) |> 
+      select(-site_id)
+    
     } else {
     xlims <- c(as.Date(min(combined_tibble$date)), (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
-  }
+    obs_hist <- obs_hist |> 
+      filter(datetime > min(combined_tibble$datetime)) |> 
+      select(-site_id)
+    
+    }
+  
+  combined_tibble <- combined_tibble |> 
+    full_join(obs_hist, by = c('datetime','depth','variable')) |> 
+    mutate(observed = ifelse(is.na(observed), observation, observed), 
+           date = as.Date(datetime))
   
   if (num_depths > 1){
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
@@ -137,9 +152,8 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
       #ggplot2::geom_line(ggplot2::aes(y = climatology_average), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
       ggplot2::geom_line(ggplot2::aes(y = climatology_average, color = 'climatology_average'), size = 0.5, linetype = 'longdash') +
-      ggplot2::geom_point(data = obs_hist, ggplot2::aes(x=as.Date(datetime),y = observation), color = 'red') +
-      ggplot2::geom_vline(aes(xintercept = as.Date(most_recent)),
-                          alpha = 1, linetype = "solid") +
+      ggplot2::geom_point(ggplot2::aes(y = observed), color = 'red') +
+      ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), 'Australia/Adelaide')), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'forecast_mean'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
