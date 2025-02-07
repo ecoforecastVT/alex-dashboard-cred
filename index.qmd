@@ -56,7 +56,7 @@ current_temp <- obs_cleaned |>
   mutate(var_unit = paste0(round(observation,1), ' °C')) |> 
   pull(var_unit)
 
-day_of_interest <- max(obs_df$datetime,na.rm = TRUE)
+day_of_interest <- max(obs_cleaned$datetime,na.rm = TRUE)
 
 temp_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs_updated, clim_var = interest_var) ## returns CLIM AVG and BS ICON FOR ARROW DIRECTION
 
