@@ -29,6 +29,9 @@ Disclaimer: The data provided on this page are experimental.
 # library(leaflet)
 # library(oce)
 
+source('R/climatology_calc.R')
+source('R/future_trend_calc.R')
+
 ### READ IN INSITU TARGETS
 lake_directory <- getwd()
 options(timeout=300)
