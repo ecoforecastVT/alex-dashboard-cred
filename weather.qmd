@@ -2,8 +2,7 @@
 title: Weather Forecasts
 ---
 
-This page contains information about weather in the Lake Alexandrina area. Observations are provided by [SA Water](https://www.sawater.com.au/), and weather forecasts are provided by the [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model.  
-
+This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php). Observations are provided by [Water Data SA](https://water.data.sa.gov.au/)
 Disclaimer: The data provided on this page is experimental.<br /> 
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
@@ -175,7 +174,7 @@ filter(!(date == noaa_date & is.na(wind_deg_obs)))
 
 ## Wind Forecast with Historical Observations
 
-All forecasts are valid for 10:30am ACDT (00:00 UTC). The red line represents observed wind speed with red arrows indicating the wind direction at each available in-situ observation. The black line represents the mean forecast predictions for wind speed with black arrows indicating the wind direction at each prediction. Both past and future wind predictions are provided.
+All forecasts are valid for 10:30am ACDT (00:00 UTC). The red line represents observed wind speed with red arrows indicating the wind direction at each available in-situ observation. The black line represents the mean forecast predictions for wind speed with black arrows indicating the wind direction at each prediction. Both past and future wind predictions are provided. The observations and predictions shown represent six-hour averages across the time period.
 
 ```{r, include=TRUE}
 # make wind plot with arrows 

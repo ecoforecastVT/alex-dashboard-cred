@@ -87,10 +87,10 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   
   obs_hist_full <- obs_hist
   
-  if (as.Date(most_recent) - as.Date(min(combined_tibble$date)) < 10){
-    xlims <- c(as.Date(min(combined_tibble$date)) - 10 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
+  if (as.Date(most_recent) - as.Date(min(combined_tibble$date)) < 30){
+    xlims <- c(as.Date(min(combined_tibble$date)) - 30 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
     obs_hist <- obs_hist |> 
-      filter(datetime > min(combined_tibble$datetime) - lubridate::days(10)) |> 
+      filter(datetime > min(combined_tibble$datetime) - lubridate::days(30)) |> 
       select(-site_id)
     
     } else {
