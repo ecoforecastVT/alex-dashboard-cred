@@ -65,25 +65,27 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   combined_tibble$secondary_dates <- secondary_forecast_dates
   
   
-  ## identify climatology values for time period using historical observations
-  interest_days_doy <- combined_tibble |> 
-    mutate(doy = lubridate::yday(date)) |> 
-    pull(doy)
+  # ## identify climatology values for time period using historical observations
+  # interest_days_doy <- combined_tibble |> 
+  #   mutate(doy = lubridate::yday(date)) |> 
+  #   pull(doy)
+  # 
+  # obs_climatology <- obs_hist |>
+  #   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>
+  #   mutate(doy = lubridate::yday(datetime)) |>
+  #   filter(doy %in% interest_days_doy) |>
+  #   # mutate(climatology_average = mean(observation, na.rm = TRUE)) |>
+  #   # select(doy, climatology_average)
+  #   group_by(doy) |>
+  #   summarize(climatology_average = mean(observation, na.rm = TRUE)) |>
+  #   ungroup()
+  # 
+  # 
+  # combined_tibble <- combined_tibble |>
+  #   mutate(doy = lubridate::yday(date)) |>
+  #   right_join(obs_climatology, by = c('doy'))
   
-  obs_climatology <- obs_hist |> 
-    mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
-    mutate(doy = lubridate::yday(datetime)) |> 
-    filter(doy %in% interest_days_doy) |> 
-    # mutate(climatology_average = mean(observation, na.rm = TRUE)) |> 
-    # select(doy, climatology_average)
-    group_by(doy) |>
-    summarize(climatology_average = mean(observation, na.rm = TRUE)) |>
-    ungroup()
-    
-  
-  combined_tibble <- combined_tibble |> 
-    mutate(doy = lubridate::yday(date)) |> 
-    right_join(obs_climatology, by = c('doy'))
+  obs_hist_full <- obs_hist
   
   if (as.Date(most_recent) - as.Date(min(combined_tibble$date)) < 10){
     xlims <- c(as.Date(min(combined_tibble$date)) - 10 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
@@ -103,6 +105,27 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     full_join(obs_hist, by = c('datetime','depth','variable')) |> 
     mutate(observed = ifelse(is.na(observed), observation, observed), 
            date = as.Date(datetime))
+  
+  
+  ## identify climatology values for time period using historical observations
+  interest_days_doy <- combined_tibble |> 
+    mutate(doy = lubridate::yday(date)) |> 
+    pull(doy)
+  
+  obs_climatology <- obs_hist_full |>
+    mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>
+    mutate(doy = lubridate::yday(datetime)) |>
+    filter(doy %in% interest_days_doy) |>
+    # mutate(climatology_average = mean(observation, na.rm = TRUE)) |>
+    # select(doy, climatology_average)
+    group_by(doy) |>
+    summarize(climatology_average = mean(observation, na.rm = TRUE)) |>
+    ungroup()
+  
+  
+  combined_tibble <- combined_tibble |>
+    mutate(doy = lubridate::yday(date)) |>
+    right_join(obs_climatology, by = c('doy'))
   
   if (num_depths > 1){
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
