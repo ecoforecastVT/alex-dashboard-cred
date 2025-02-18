@@ -29,14 +29,26 @@ most_recent <-  arrow::open_dataset(s3_score) |>
   collect() |> 
   pull()
 
-source('R/alex_target_generation.R')
+#source('R/alex_target_generation.R')
 
-obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
-  mutate(datetime = lubridate::with_tz(lubridate::as_datetime(datetime), 'Australia/Adelaide')) |> 
+targets_df <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(is.na(inflow_name)) |> 
+  collect() |> 
+  lubridate::with_tz(datetime, tzone = "Australia/Adelaide") |> 
+  mutate(depth = ifelse(variable == 'depth', NA, 0.5)) |> 
+  select(-inflow_name)
+
+obs_df <- targets_df |> 
   filter(variable == 'temperature',
          datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
-                                        'Australia/Adelaide')) |>
-  collect()
+                                        'Australia/Adelaide'))
+
+# obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+#   mutate(datetime = lubridate::with_tz(lubridate::as_datetime(datetime), 'Australia/Adelaide')) |> 
+#   filter(variable == 'temperature',
+#          datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
+#                                         'Australia/Adelaide')) |>
+#   collect()
 
 # obs_df <- arrow::open_csv_dataset(s3_targets) |> 
 #   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
@@ -83,7 +95,8 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 ## SALT PLOT 
-obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+obs_df <- targets_df |> 
+  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
   # filter(datetime <= obs_dates_grab,
   #        datetime <= most_recent) |> 
   filter(variable == 'salt') |> 
@@ -122,13 +135,15 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 ## Depth PLOT 
-obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+obs_df <- targets_df |> 
+  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
   # filter(datetime <= obs_dates_grab,
   #        datetime <= most_recent) |> 
   filter(variable == 'depth') |> 
   #select(datetime, observation) |> 
   collect() |> 
-  mutate(reference_datetime = most_recent)
+  mutate(reference_datetime = most_recent,
+         observation = observation - 5.3) ## convert to AHD
 
 score_df <- arrow::open_dataset(s3_score) |>
   filter(variable == "depth",
