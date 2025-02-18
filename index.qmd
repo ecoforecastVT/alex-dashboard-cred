@@ -36,11 +36,16 @@ source('R/future_trend_calc.R')
 lake_directory <- getwd()
 options(timeout=300)
 
-obs_cleaned <- readr::read_csv(file.path(lake_directory, "targets/ALEX-targets-insitu.csv")) |> 
+obs_cleaned <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(is.na(inflow_name)) |> 
+  collect() |> 
   lubridate::with_tz(datetime, tzone = "Australia/Adelaide")
-  
 
+# obs_cleaned <- readr::read_csv(file.path(lake_directory, "targets/ALEX-targets-insitu.csv")) |> 
+#   lubridate::with_tz(datetime, tzone = "Australia/Adelaide")
+  
 obs_updated <- max(obs_cleaned$datetime,na.rm = TRUE)
+
 ```
 
 
