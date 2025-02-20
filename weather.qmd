@@ -135,7 +135,7 @@ wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/fla
   mutate(date = as.Date(datetime),
          hour = lubridate::hour(datetime)) |> 
   group_by(date, hour) |> 
-  summarise(wind_deg_obs = mean(value, na.rm = TRUE)) |> 
+  summarise(wind_deg_obs = mean(observation, na.rm = TRUE)) |> 
   ungroup() |> 
   mutate(time = paste0(hour,':00:00'),
          datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
@@ -151,7 +151,7 @@ wind_velocity_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket0
   mutate(date = as.Date(datetime),
          hour = lubridate::hour(datetime)) |> 
   group_by(date, hour) |> 
-  summarise(wind_speed_obs = mean(value, na.rm = TRUE)) |> 
+  summarise(wind_speed_obs = mean(observation, na.rm = TRUE)) |> 
   ungroup() |> 
   mutate(time = paste0(hour,':00:00'),
          datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
