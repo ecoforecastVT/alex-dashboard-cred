@@ -95,7 +95,7 @@ current_depth <- obs_cleaned |>
 height_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs_updated, clim_var = interest_var)
 
 ```
-
+```{r}
 site_updated <- Sys.Date()
 ```
 
