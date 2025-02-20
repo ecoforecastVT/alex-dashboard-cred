@@ -23,5 +23,5 @@ climatology_calc <- function(obs_df, day_of_interest, clim_var){
     arrow_icon <- 'arrow-down-square'
   }
 
-  return(list(clim_avg$obs_avg, arrow_icon))
+  return(list(round(clim_avg$obs_avg,1), arrow_icon))
 }
