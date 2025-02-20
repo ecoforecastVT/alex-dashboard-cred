@@ -55,15 +55,19 @@ interest_var <- 'temperature'
 interest_site <- 'ALEX'
 days_ahead <- 7
 
-current_temp <- obs_cleaned |> 
-  filter(datetime == obs_updated,
-         variable == interest_var) |> 
+temp_df <- obs_cleaned |> 
+  filter(variable == interest_var)
+
+temp_updated <- temp_df |> 
+  filter(datetime == max(temp_df$datetime)) |>
+  pull(datetime)
+
+current_temp <- temp_df |> 
+  filter(datetime == temp_updated) |> 
   mutate(var_unit = paste0(round(observation,1), ' °C')) |> 
   pull(var_unit)
 
-day_of_interest <- max(obs_cleaned$datetime,na.rm = TRUE)
-
-temp_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs_updated, clim_var = interest_var) ## returns CLIM AVG and BS ICON FOR ARROW DIRECTION
+temp_clim_values <- climatology_calc(obs_df = temp_df, day_of_interest = temp_updated, clim_var = interest_var) ## returns CLIM AVG and BS ICON FOR ARROW DIRECTION
 
 
 ```
@@ -72,13 +76,19 @@ temp_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs
 ## SALINITY
 interest_var <- 'salt'
 
-current_salt <- obs_cleaned |> 
-  filter(datetime == obs_updated,
-         variable == interest_var) |> 
+salt_df <- obs_cleaned |> 
+  filter(variable == interest_var)
+
+salt_updated <- salt_df |> 
+  filter(datetime == max(salt_df$datetime)) |>
+  pull(datetime)
+
+current_salt <- salt_df |> 
+  filter(datetime == salt_updated) |> 
   mutate(var_unit = paste0(round(observation,1), ' ppt')) |> 
   pull(var_unit)
 
-salt_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs_updated, clim_var = interest_var)
+salt_clim_values <- climatology_calc(obs_df = salt_df, day_of_interest = salt_updated, clim_var = interest_var)
 
 ```
 
@@ -86,15 +96,22 @@ salt_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs
 ## LAKE HEIGHT
 interest_var <- 'depth'
 
-current_depth <- obs_cleaned |> 
-  filter(datetime == obs_updated,
-         variable == interest_var) |> 
+depth_df <- obs_cleaned |> 
+  filter(variable == interest_var)
+
+depth_updated <- depth_df |> 
+  filter(datetime == max(depth_df$datetime)) |>
+  pull(datetime)
+
+current_depth <- depth_df |> 
+  filter(datetime == depth_updated) |> 
   mutate(var_unit = paste0(round(observation,1), ' AHD')) |> 
   pull(var_unit)
 
-height_clim_values <- climatology_calc(obs_df = obs_cleaned, day_of_interest = obs_updated, clim_var = interest_var)
+height_clim_values <- climatology_calc(obs_df = depth_df, day_of_interest = depth_updated, clim_var = interest_var)
 
 ```
+
 ```{r}
 site_updated <- Sys.Date()
 ```
