@@ -125,7 +125,9 @@ historical_met_df_em_avg <- noaa_historical_df |>
 
 ## READ IN WIND OBSERVATIONS
 
-wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(variable == 'wind_direction') |> 
+  collect() |> 
   #mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
   filter(datetime > (historical_date_cutoff)) |> #, 
@@ -139,7 +141,9 @@ wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |>
          datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
   select(datetime, wind_deg_obs)
 
-wind_velocity_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
+wind_velocity_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(variable == 'wind_speed') |> 
+  collect() |> 
   #mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>   
   filter(datetime > (historical_date_cutoff)) |> #, 
