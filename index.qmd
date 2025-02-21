@@ -32,6 +32,7 @@ Disclaimer: The data provided on this page are experimental.
 
 source('R/climatology_calc.R')
 source('R/future_trend_calc.R')
+source('R/historic_trend_calc.R')
 
 ### READ IN INSITU TARGETS
 lake_directory <- getwd()
