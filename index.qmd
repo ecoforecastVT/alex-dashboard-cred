@@ -123,28 +123,38 @@ site_updated <- Sys.Date()
 ## use average wind conditions for last six hours?
 source('./R/degToCompass.R')
 
-most_recent_wind <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+# most_recent_wind <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+#   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+#   filter(row_number() == n()) |> 
+#   pull(datetime)
+
+wind_targets <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(variable %in% c('wind_direction', 'wind_velocity')) |> 
+  collect() |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide"))
+
+
+most_recent_wind <- wind_targets |> 
   filter(row_number() == n()) |> 
   pull(datetime)
 
-wind_dir_obs <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
-  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+wind_dir_obs <- wind_targets |>
+  filter(variable == 'wind_direction') |> 
   filter(datetime > (most_recent_wind - lubridate::hours(5))) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
   group_by(wind_hour) |>  
-  summarise(wind_dir_mean_hour = mean(value, na.rm = TRUE)) |> 
+  summarise(wind_dir_mean_hour = mean(observation, na.rm = TRUE)) |> 
   ungroup() |>
   summarise(wind_dir_mean = mean(wind_dir_mean_hour)) |> 
   mutate(mean_wind_direction = degToCompass(wind_dir_mean))
 
-wind_speed_obs <- read_csv('targets/ALEX_wind_speed_targets.csv') |> 
-  mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+wind_speed_obs <- wind_targets |>
+  filter(variable == 'wind_velocity') |>
   filter(datetime >= (most_recent_wind - lubridate::hours(5))) |> 
   filter(datetime <= most_recent_wind) |> 
   mutate(wind_hour = lubridate::hour(datetime)) |> 
   group_by(wind_hour) |> 
-  summarise(wind_speed_mean_hour = mean(value, na.rm = TRUE)*3.6) |> 
+  summarise(wind_speed_mean_hour = mean(observation, na.rm = TRUE)*3.6) |> 
   ungroup() |>
   summarise(wind_speed_mean = (mean(wind_speed_mean_hour))) ## m/s -> km-hr
 
