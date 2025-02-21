@@ -14,7 +14,8 @@ library(leaflet)
 library(oce)
 
 ```
-![](vt_cef.jpg){fig-align="center" width=40%}
+
+![](vt_cef.jpg){fig-align="center" width="40%"}
 
 Disclaimer: The data provided on this page are experimental.
 
@@ -48,12 +49,11 @@ obs_updated <- max(obs_cleaned$datetime,na.rm = TRUE)
 
 ```
 
-
 ```{r}
 ## WATER TEMPERATURE 
 interest_var <- 'temperature'
 interest_site <- 'ALEX'
-days_ahead <- 7
+day_range <- 10
 
 temp_df <- obs_cleaned |> 
   filter(variable == interest_var)
@@ -69,6 +69,9 @@ current_temp <- temp_df |>
 
 temp_clim_values <- climatology_calc(obs_df = temp_df, day_of_interest = temp_updated, clim_var = interest_var) ## returns CLIM AVG and BS ICON FOR ARROW DIRECTION
 
+temp_trend_future <- future_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_ahead = day_range, interest_site = interest_site)
+
+temp_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_historic = day_range, interest_site = interest_site)
 
 ```
 
@@ -90,6 +93,10 @@ current_salt <- salt_df |>
 
 salt_clim_values <- climatology_calc(obs_df = salt_df, day_of_interest = salt_updated, clim_var = interest_var)
 
+salt_trend_future <- future_trend_calc(day_of_interest = salt_updated, interest_var = interest_var, days_ahead = day_range, interest_site = interest_site)
+
+temp_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_historic = day_range, interest_site = interest_site)
+
 ```
 
 ```{r}
@@ -109,6 +116,10 @@ current_depth <- depth_df |>
   pull(var_unit)
 
 height_clim_values <- climatology_calc(obs_df = depth_df, day_of_interest = depth_updated, clim_var = interest_var)
+
+height_trend_future <- future_trend_calc(day_of_interest = depth_updated, interest_var = interest_var, days_ahead = day_range, interest_site = interest_site)
+
+temp_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_historic = day_range, interest_site = interest_site)
 
 ```
 
@@ -201,7 +212,7 @@ layout_column_wrap(
 
 ```
 
-<br /> 
+<br />
 
 ## Average Wind Conditions for Lake Alexandrina (last 6 hours)
 
@@ -243,8 +254,8 @@ leaflet() %>%
   addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner))#, clusterOptions = markerClusterOptions())
 ```
 
-<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br /> 
+<br /> <br /> This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br />
 
-We would like to acknowledge [Water Data SA](https://water.data.sa.gov.au/) for providing observational data for the forecasts presented on this dashboard. <br /> <br /> 
+We would like to acknowledge [Water Data SA](https://water.data.sa.gov.au/) for providing observational data for the forecasts presented on this dashboard. <br /> <br />
 
 Page last updated on `r Sys.Date()`
