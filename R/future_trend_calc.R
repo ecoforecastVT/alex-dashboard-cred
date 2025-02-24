@@ -14,6 +14,19 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
            model_id == 'glm_flare_v3') |>
     dplyr::collect() |> 
     mutate(rownum = row_number())
+  
+  past_reference_datetime <- day_of_interest - lubridate::days(days_ahead)
+  past_variance <- arrow::open_dataset(s3_score) |> 
+    filter(variable == interest_var,
+           site_id %in% interest_site,
+           horizon == 0,
+           datetime >= past_reference_datetime,
+           datetime <= day_of_interest,
+           model_id == 'glm_flare_v3') |> 
+    collect() |> 
+    summarise(mean_var = var(mean, na.rm = TRUE)) |> 
+    pull(mean_var)
+  
   } else {
     score_df <- arrow::open_dataset(s3_score) |>
       filter(variable == interest_var,
@@ -25,6 +38,19 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
              model_id == 'glm_flare_v3') |>
       dplyr::collect() |> 
       mutate(rownum = row_number())
+    
+    past_reference_datetime <- day_of_interest - lubridate::days(days_ahead)
+    past_variance <- arrow::open_dataset(s3_score) |> 
+      filter(variable == interest_var,
+             site_id %in% interest_site,
+             depth %in% c(0.5),
+             horizon == 0,
+             datetime >= past_reference_datetime,
+             datetime <= day_of_interest,
+             model_id == 'glm_flare_v3') |> 
+      dplyr::collect() |> 
+      summarise(mean_var = var(mean)) |> 
+      pull(mean_var)
   }
   ## FIGURE OUT THE CRITERIA WE WANT TO USE FOR THE TREND SIGNIFICANCE
   
@@ -33,13 +59,13 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
   trend_model <- lm(score_df$mean ~ score_df$rownum)
   var_trend <- trend_model$coefficients[[2]]
   
-  var_threshold <- mean(score_df$mean, na.rm = TRUE)*0.05
+  var_threshold <- past_variance ## the mean variance from the past historical days `days ahead`
   
-  if ((var_trend <= var_threshold) & (var_trend >= var_threshold)){
+  if (var_trend <= var_threshold){
     arrow_icon <- 'arrow-bar-right'
-  } else if (var_trend > var_threshold){
+  } else if (abs(var_trend) > var_threshold & sign(var_trend) == 1){
     arrow_icon <- 'arrow-up-square'
-  } else if (var_trend < var_threshold){
+  } else if (abs(var_trend) > var_threshold & sign(var_trend) == -1){
     arrow_icon <- 'arrow-down-square'
   }
   

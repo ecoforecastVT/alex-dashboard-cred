@@ -2,8 +2,7 @@
 title: Weather Forecasts
 ---
 
-This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php). Observations are provided by [Water Data SA](https://water.data.sa.gov.au/)
-Disclaimer: The data provided on this page is experimental.<br /> 
+This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php). Observations are provided by [Water Data SA](https://water.data.sa.gov.au/) Disclaimer: The data provided on this page is experimental.<br />
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -69,7 +68,6 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
          wind_dir = degToCompass(wind_deg)) |> 
   select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
 ```
-
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 ## MAKE PLOT SHOWING HISTORICAL OBS, HISTORICAL FORECAST, AND FUTURE FORECAST
