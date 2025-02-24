@@ -13,6 +13,21 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
       mutate(rownum = row_number())
+    
+    past_reference_datetime <- day_of_interest - lubridate::days(days_historic + days_historic) ## set it to be two periods ago (use period before trend calculation)
+    trend_calculation_date_start <- day_of_interest - lubridate::days(days_historic)
+    past_variance <- arrow::open_dataset(s3_score) |> 
+      filter(variable == interest_var,
+             site_id %in% interest_site,
+             #horizon <= days_historic,
+             horizon == 0,
+             datetime >= past_reference_datetime,
+             datetime <= trend_calculation_date_start,
+             model_id == 'glm_flare_v3') |> 
+      dplyr::collect() |> 
+      summarise(mean_var = var(mean)) |> 
+      pull(mean_var)
+    
   } else {
     score_df <- arrow::open_dataset(s3_score) |>
       filter(variable == interest_var,
@@ -23,6 +38,21 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
       mutate(rownum = row_number())
+    
+    past_reference_datetime <- day_of_interest - lubridate::days(days_historic + days_historic) ## set it to be two periods ago (use period before trend calculation)
+    trend_calculation_date_start <- day_of_interest - lubridate::days(days_historic)
+    past_variance <- arrow::open_dataset(s3_score) |> 
+      filter(variable == interest_var,
+             site_id %in% interest_site,
+             depth %in% c(0.5),
+             #horizon <= days_historic,
+             horizon == 0,
+             datetime >= past_reference_datetime,
+             datetime <= trend_calculation_date_start,
+             model_id == 'glm_flare_v3') |> 
+      dplyr::collect() |> 
+      summarise(mean_var = var(mean)) |> 
+      pull(mean_var)
   }
   ## FIGURE OUT THE CRITERIA WE WANT TO USE FOR THE TREND SIGNIFICANCE
   
@@ -31,13 +61,13 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
   trend_model <- lm(score_df$mean ~ score_df$rownum)
   var_trend <- trend_model$coefficients[[2]]
   
-  var_threshold <- mean(score_df$mean)*0.05
+  var_threshold <- past_variance ## the mean variance of 0-horizon predictions from 2X the historic days prior until the historic trend period (1X historic days prior)
   
-  if ((var_trend <= var_threshold) & (var_trend >= var_threshold)){
+  if (var_trend <= var_threshold){
     arrow_icon <- 'arrow-bar-right'
-  } else if (var_trend > var_threshold){
+  } else if (abs(var_trend) > var_threshold & sign(var_trend) == 1){
     arrow_icon <- 'arrow-up-square'
-  } else if (var_trend < var_threshold){
+  } else if (abs(var_trend) > var_threshold & sign(var_trend) == -1){
     arrow_icon <- 'arrow-down-square'
   }
   
