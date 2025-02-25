@@ -236,6 +236,34 @@ layout_column_wrap(
 ```
 
 
+
+## Comparison of Water Conditions to Climatology
+```{r}
+layout_column_wrap(
+  width = "250px",
+  value_box(
+    title = "Water Temperature Trend", 
+    value = temp_clim_values[[3]],
+    showcase = bs_icon(temp_clim_values[[2]]),
+    theme_color = "primary" 
+  ),
+  value_box(
+    title = "Water Salinity Trend", 
+    value = salt_clim_values[[3]],
+    showcase = bs_icon(salt_clim_values[[2]]),
+    theme_color = "primary"
+  ),
+    value_box(
+    title = "Lake Height Comparison", 
+    value = height_clim_values[[3]],
+    showcase = bs_icon(height_clim_values[[2]]),
+    theme_color = "primary" 
+  )
+)
+
+```
+
+
 ## Future 10-day Trend for Water Conditions
 ```{r}
 
