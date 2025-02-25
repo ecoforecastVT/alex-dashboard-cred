@@ -17,11 +17,14 @@ climatology_calc <- function(obs_df, day_of_interest, clim_var){
   
   if ((current_df$observation <= clim_avg$obs_95) & (current_df$observation >= clim_avg$obs_05)){
     arrow_icon <- 'arrow-bar-right'
+    clim_text <- 'Similar'
   } else if (current_df$observation > clim_avg$obs_95){
-    arrow_icon <- 'arrow-up-square'
+    arrow_icon <- 'arrow-bar-up'
+    clim_text <- 'Higher'
   } else if (current_df$observation < clim_avg$obs_05){
-    arrow_icon <- 'arrow-down-square'
+    arrow_icon <- 'arrow-bar-down'
+    clim_text <- 'Lower'
   }
 
-  return(list(round(clim_avg$obs_avg,1), arrow_icon))
+  return(list(round(clim_avg$obs_avg,1), arrow_icon, clim_text))
 }
