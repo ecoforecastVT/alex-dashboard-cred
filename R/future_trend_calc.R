@@ -63,11 +63,14 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
   
   if (var_trend <= var_threshold){
     arrow_icon <- 'arrow-bar-right'
+    trend_text <- 'No Change'
   } else if (abs(var_trend) > var_threshold & sign(var_trend) == 1){
-    arrow_icon <- 'arrow-up-square'
+    arrow_icon <- 'graph-up-arrow'
+    trend_text <- 'Increasing'
   } else if (abs(var_trend) > var_threshold & sign(var_trend) == -1){
-    arrow_icon <- 'arrow-down-square'
+    arrow_icon <- 'graph-down-arrow'
+    trend_text <- 'Decreasing'
   }
   
-  return(list(round(var_trend,1), arrow_icon))
+  return(list(round(var_trend,1), arrow_icon, trend_text))
 }
