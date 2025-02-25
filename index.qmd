@@ -249,13 +249,13 @@ layout_column_wrap(
   ),
   value_box(
     title = "Water Salinity Trend", 
-    value = temp_trend_future[[3]],
+    value = salt_trend_future[[3]],
     showcase = bs_icon(salt_trend_future[[2]]),
     theme_color = "primary"
   ),
     value_box(
     title = "Lake Height Trend", 
-    value = temp_trend_future[[3]],
+    value = height_trend_future[[3]],
     showcase = bs_icon(height_trend_future[[2]]),
     theme_color = "primary" 
   )
@@ -276,13 +276,13 @@ layout_column_wrap(
   ),
   value_box(
     title = "Water Salinity Trend", 
-    value = temp_trend_historic[[3]],
+    value = salt_trend_historic[[3]],
     showcase = bs_icon(salt_trend_historic[[2]]),
     theme_color = "primary"
   ),
     value_box(
     title = "Lake Height Trend", 
-    value = temp_trend_historic[[3]],
+    value = height_trend_historic[[3]],
     showcase = bs_icon(height_trend_historic[[2]]),
     theme_color = "primary" 
   )
