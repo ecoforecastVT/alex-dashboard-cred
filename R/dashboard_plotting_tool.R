@@ -116,10 +116,10 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>
     mutate(doy = lubridate::yday(datetime)) |>
     filter(doy %in% interest_days_doy) |>
-    # mutate(climatology_average = mean(observation, na.rm = TRUE)) |>
-    # select(doy, climatology_average)
+    # mutate(`historical mean` = mean(observation, na.rm = TRUE)) |>
+    # select(doy, `historical mean`)
     group_by(doy) |>
-    summarize(climatology_average = mean(observation, na.rm = TRUE)) |>
+    summarize(`historical mean` = mean(observation, na.rm = TRUE)) |>
     ungroup()
   
   
@@ -138,7 +138,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90,
                                         fill = as.factor(depth)),
                            alpha = 0.1) +      
-      ggplot2::geom_line(ggplot2::aes(y = climatology_average, color = as.factor(depth)), size = 0.5, linetype = 'dashed') +
+      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = as.factor(depth)), size = 0.5, linetype = 'dashed') +
       ggplot2::geom_point(data = obs_hist, ggplot2::aes(x=as.Date(datetime),y = observation, color = as.factor(depth)), size = 2) +
       ggplot2::geom_vline(aes(xintercept = as.Date(most_recent),
                               linetype = "solid"),
@@ -173,8 +173,8 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::xlim(xlims) +
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
-      #ggplot2::geom_line(ggplot2::aes(y = climatology_average), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
-      ggplot2::geom_line(ggplot2::aes(y = climatology_average, color = 'climatology_average'), size = 0.5, linetype = 'longdash') +
+      #ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
+      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'historical mean'), size = 0.5, linetype = 'longdash') +
       ggplot2::geom_point(ggplot2::aes(y = observed), color = 'red') +
       ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), 'Australia/Adelaide')), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
@@ -191,7 +191,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                     y = var_unit,
                     title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       scale_colour_manual("", 
-                          values = c("forecast_mean"="black", "climatology_average"="darkslategrey")) +
+                          values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      plot.title = element_text(hjust = 0.5))
   }
