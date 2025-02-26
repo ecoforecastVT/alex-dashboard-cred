@@ -48,6 +48,8 @@ obs_updated <- max(obs_cleaned$datetime,na.rm = TRUE)
 
 ```
 
+## Current Conditions for Lake Alexandrina
+
 ```{r}
 ## WATER TEMPERATURE 
 interest_var <- 'temperature'
@@ -214,7 +216,7 @@ layout_column_wrap(
 
 <br />
 
-### Average Wind Conditions for Lake Alexandrina (last 6 hours)
+### Average Wind Conditions (last 6 hours)
 
 ```{r}
 layout_column_wrap(
