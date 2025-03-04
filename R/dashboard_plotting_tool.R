@@ -144,7 +144,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                               linetype = "solid"),
                           alpha = 1) +
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
-      ggplot2::annotate(x = as.Date(most_recent + 96*60*100), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
+      ggplot2::annotate(x = as.Date(most_recent + 96*60*80), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
       ggplot2::theme_light() +
       ggplot2::scale_fill_manual(name = "Depth (m)",
                                  values = c("#D55E00", '#009E73', '#0072B2'),
@@ -180,7 +180,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'forecast_mean'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
-      ggplot2::annotate(x = as.Date(most_recent + 96*60*100), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
+      ggplot2::annotate(x = as.Date(most_recent + 96*60*80), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
       ggplot2::theme_light() +
       ggplot2::scale_linetype_manual(name = "",
                                      values = c('solid'),
