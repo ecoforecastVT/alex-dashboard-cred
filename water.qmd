@@ -16,7 +16,7 @@ source('./R/dashboard_plotting_tool.R')
 
 ## Water Temperature Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="200%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
 s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 s3_targets <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/targets/ALEX", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
@@ -85,7 +85,7 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
   collect()
   
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(10,30), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(13,27), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
@@ -93,7 +93,7 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ## Salinity Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="200%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
 ## SALT PLOT 
 obs_df <- targets_df |> 
   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
@@ -125,7 +125,7 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
   collect()
   
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0,1), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(0.2,0.5), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
@@ -133,7 +133,7 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ## Lake Depth Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="200%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
 ## Depth PLOT 
 obs_df <- targets_df |> 
   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
@@ -168,5 +168,5 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          quantile90 = quantile90 - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
   collect()
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0,1.2), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = 'Australia/Adelaide', ylims = c(0.3,0.8), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```
