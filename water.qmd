@@ -16,7 +16,7 @@ source('./R/dashboard_plotting_tool.R')
 
 ## Water Temperature Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="300%"}
 s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
 s3_targets <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/targets/ALEX", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
@@ -93,7 +93,7 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ## Salinity Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="300%"}
 ## SALT PLOT 
 obs_df <- targets_df |> 
   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
@@ -133,7 +133,7 @@ dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, dept
 
 ## Lake Depth Forecast
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="250%"}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.align='center',  out.width="300%"}
 ## Depth PLOT 
 obs_df <- targets_df |> 
   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
