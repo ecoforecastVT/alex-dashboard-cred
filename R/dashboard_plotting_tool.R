@@ -16,7 +16,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   } else if(data_var == 'depth'){
     var_title = 'Lake Depth'
     var_unit = 'Depth (AHD)' 
-    label_height_adjust <- 0.1
+    label_height_adjust <- 0.01
   } else{
     var_title = 'Water Quality Variable'
     var_unit = 'Variable Unit'
@@ -174,11 +174,11 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
       #ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
-      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'historical mean'), size = 0.5, linetype = 'longdash') +
+      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'Historical One-Day-\nAhead Predictions'), size = 0.5, linetype = 'longdash') +
       ggplot2::geom_point(ggplot2::aes(y = observed), color = 'red') +
       ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), 'Australia/Adelaide')), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
-      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'forecast_mean'))+
+      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
       ggplot2::annotate(x = as.Date(most_recent + 96*60*80), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
       ggplot2::theme_light() +
@@ -190,10 +190,12 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::labs(x = "Date",
                     y = var_unit,
                     title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
-      scale_colour_manual("", 
-                          values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
+      # scale_colour_manual("", 
+      #                     values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
+      scale_color_manual("", values = c("Future Predictions"="black", "Historical One-Day-\nAhead Predictions" ="darkslategrey")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
-                     plot.title = element_text(hjust = 0.5))
+                     plot.title = element_text(hjust = 0.5)) #+
+      #scale_fill_discrete(labels=c('Forecast', 'Historical'))
   }
   
   return(p)
