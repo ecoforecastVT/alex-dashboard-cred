@@ -85,7 +85,7 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
   collect()
   
 
-dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(15,27), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = 'Australia/Adelaide', ylims = c(13,27), site_name = site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
