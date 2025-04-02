@@ -125,7 +125,9 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   
   combined_tibble <- combined_tibble |>
     mutate(doy = lubridate::yday(date)) |>
-    right_join(obs_climatology, by = c('doy'))
+    right_join(obs_climatology, by = c('doy')) |> 
+    mutate(forecast_mean_historical = ifelse(date <= Sys.Date(), forecast_mean, NA),
+           forecast_mean = ifelse(date < Sys.Date(),NA,forecast_mean))   # split historical and future forecasts into two separate columns
   
   if (num_depths > 1){
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
@@ -174,9 +176,10 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
       #ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
-      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'Historical One-Day-\nAhead Predictions'), size = 0.5, linetype = 'longdash') +
+      ggplot2::geom_line(ggplot2::aes(y = forecast_mean_historical, color = 'Historical One-Day-\nAhead Predictions'), size = 0.5, linetype = 'solid') +
+      ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'Historical Average'), size = 0.5, linetype = 'longdash', size = 0.5) +
       ggplot2::geom_point(ggplot2::aes(y = observed), color = 'red') +
-      ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), 'Australia/Adelaide')), alpha = 1, linetype = "solid") +
+      ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), tzone)), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
@@ -192,10 +195,12 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                     title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       # scale_colour_manual("", 
       #                     values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
-      scale_color_manual("", values = c("Future Predictions"="black", "Historical One-Day-\nAhead Predictions" ="darkslategrey")) +
+      scale_color_manual("", values = c("Future Predictions"="black", 
+                                        "Historical One-Day-\nAhead Predictions" ="slategrey", 
+                                        "Historical Average" = "firebrick4")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      plot.title = element_text(hjust = 0.5)) #+
-      #scale_fill_discrete(labels=c('Forecast', 'Historical'))
+    #scale_fill_discrete(labels=c('Forecast', 'Historical'))
   }
   
   return(p)
