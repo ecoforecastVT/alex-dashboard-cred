@@ -1,0 +1,863 @@
+---
+title: "Lake Alexandrina Dashboard"
+logo: vt_cef.jpg
+fig-width: 10
+fig-asp: 0.3
+format:
+  dashboard:
+      theme: 
+        - brand
+        - style.scss
+      orientation: rows
+      expandable: true
+      scrolling: true
+      nav-buttons:
+      - icon: github
+        href: https://github.com/FLARE-forecast/alex-dashboard
+      css: style.css
+---
+
+```{r}
+#| label: set-inputs
+library(tidyverse)
+library(arrow)
+library(bslib)
+library(bsicons)
+library(leaflet)
+library(oce)
+
+build_day <- Sys.Date() 
+
+timezone <- 'Australia/Adelaide'
+
+model_identifier = 'glm_flare_v3'
+interest_site <- 'ALEX'
+
+source('R/climatology_calc.R')
+source('R/future_trend_calc.R')
+source('R/historic_trend_calc.R')
+
+### READ IN INSITU TARGETS
+lake_directory <- getwd()
+options(timeout=300)
+
+insitu_obs_url<- "https://renc.osn.xsede.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-insitu.csv"
+
+obs_cleaned <- readr::read_csv(insitu_obs_url) |> 
+  filter(variable %in% c('temperature','salt', 'depth')) |> #, # was TEMP for CANN
+         #depth == 0.5) |> ##insitu sensors and met 
+  #dplyr::filter(is.na(inflow_name)) |> 
+  collect() |> 
+  lubridate::with_tz(datetime, tzone = timezone)
+
+obs_updated <- max(obs_cleaned$datetime,na.rm = TRUE)
+```
+
+```{r}
+## WATER TEMPERATURE 
+interest_var <- 'temperature'
+#interest_site <- 'CANN'
+day_range <- 10
+
+temp_df <- obs_cleaned |> 
+  filter(variable == interest_var) #|> 
+  #mutate(variable = 'temperature')
+
+temp_updated <- temp_df |> 
+  filter(datetime == max(temp_df$datetime)) |>
+  distinct(datetime) |> 
+  pull(datetime)
+
+current_temp <- temp_df |> 
+  filter(datetime == temp_updated) |> 
+  mutate(var_unit = paste0(round(observation,1), ' °C')) |> 
+  pull(var_unit)
+
+temp_clim_values <- climatology_calc(obs_df = temp_df, day_of_interest = temp_updated, clim_var = interest_var) ## returns CLIM AVG and BS ICON FOR ARROW DIRECTION
+
+temp_trend_future <- future_trend_calc(day_of_interest = temp_updated, interest_var = 'temperature', days_ahead = day_range, interest_site = interest_site)
+
+temp_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = 'temperature', days_historic = day_range, interest_site = interest_site)
+```
+
+```{r}
+## SALINITY
+interest_var <- 'salt'
+
+salt_df <- obs_cleaned |> 
+  filter(variable == interest_var)
+
+salt_updated <- salt_df |> 
+  filter(datetime == max(salt_df$datetime)) |>
+  pull(datetime)
+
+current_salt <- salt_df |> 
+  filter(datetime == salt_updated) |> 
+  mutate(var_unit = paste0(round(observation,1), ' ppt')) |> 
+  pull(var_unit)
+
+salt_clim_values <- climatology_calc(obs_df = salt_df, day_of_interest = salt_updated, clim_var = interest_var)
+
+salt_trend_future <- future_trend_calc(day_of_interest = salt_updated, interest_var = interest_var, days_ahead = day_range, interest_site = interest_site)
+
+salt_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_historic = day_range, interest_site = interest_site)
+```
+
+```{r}
+## LAKE HEIGHT
+interest_var <- 'depth'
+
+depth_df <- obs_cleaned |> 
+  filter(variable == interest_var)
+
+depth_updated <- depth_df |> 
+  filter(datetime == max(depth_df$datetime)) |>
+  pull(datetime)
+
+current_depth <- depth_df |> 
+  filter(datetime == depth_updated) |> 
+  mutate(var_unit = paste0(round(observation - 5.3,1), ' AHD')) |> 
+  pull(var_unit)
+
+height_clim_values <- climatology_calc(obs_df = depth_df, day_of_interest = depth_updated, clim_var = interest_var)
+
+height_trend_future <- future_trend_calc(day_of_interest = depth_updated, interest_var = interest_var, days_ahead = day_range, interest_site = interest_site)
+
+height_trend_historic <- historic_trend_calc(day_of_interest = temp_updated, interest_var = interest_var, days_historic = day_range, interest_site = interest_site)
+
+```
+
+```{r, include=FALSE}
+## make current condition information for wind 
+## use average wind conditions for last six hours?
+source('./R/degToCompass.R')
+
+# most_recent_wind <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+#   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+#   filter(row_number() == n()) |> 
+#   pull(datetime)
+
+met_url <- "https://renc.osn.xsede.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-met.csv"
+wind_targets <- readr::read_csv(met_url) |> 
+  dplyr::filter(variable %in% c('wind_velocity','wind_direction')) |> ## CANN uses "wind_speed" 
+  collect() |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = timezone))
+
+
+most_recent_wind <- wind_targets |> 
+  filter(row_number() == n()) |> 
+  pull(datetime)
+
+wind_dir_obs <- wind_targets |>
+  filter(variable == 'wind_direction') |>
+  filter(datetime > (most_recent_wind - lubridate::hours(5))) |>
+  mutate(wind_hour = lubridate::hour(datetime)) |>
+  group_by(wind_hour) |>
+  summarise(wind_dir_mean_hour = mean(observation, na.rm = TRUE)) |>
+  ungroup() |>
+  summarise(wind_dir_mean = mean(wind_dir_mean_hour)) |>
+  mutate(mean_wind_direction = degToCompass(wind_dir_mean))
+
+wind_speed_obs <- wind_targets |>
+  filter(variable == 'wind_velocity') |>
+  filter(datetime >= (most_recent_wind - lubridate::hours(5))) |> 
+  filter(datetime <= most_recent_wind) |> 
+  mutate(wind_hour = lubridate::hour(datetime)) |> 
+  group_by(wind_hour) |> 
+  summarise(wind_speed_mean_hour = mean(observation, na.rm = TRUE)*3.6) |> 
+  ungroup() |>
+  summarise(wind_speed_mean = (mean(wind_speed_mean_hour))) ## m/s -> km-hr
+
+ wind_df <- data.frame(wind_dir = wind_dir_obs$mean_wind_direction, wind_speed = wind_speed_obs$wind_speed_mean)
+
+# wind_dates <- read_csv('targets/ALEX_wind_dir_targets.csv') |> 
+#   mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |> 
+#   filter(datetime > (most_recent_wind - lubridate::hours(6))) |> 
+#   mutate(wind_minute = lubridate::minute(datetime)) |> 
+#   filter(wind_minute == 0)
+
+# wind_df <- data.frame(datetime = wind_dates$datetime,
+#                       wind_dir = wind_dir_obs$wind_dir_mean_hour, 
+#                       wind_speed = wind_speed_obs$wind_speed_mean_hour) |> 
+#   summarise(mean_wind_deg = mean(wind_dir, na.rm = TRUE),
+#          mean_wind_speed = mean(wind_speed, na.rm = TRUE)) |> # convert to km/hr
+#   mutate(mean_wind_direction = degToCompass(mean_wind_deg)) #|> 
+#  # select(datetime, mean_wind_deg, mean_wind_speed, windmean_wind_direction)
+```
+
+##  {.sidebar}
+
+Data for Canning Weir Pool:
+
+|                      |                   |
+|----------------------|-------------------|
+| **Most Recent Data** | `{r} obs_updated` |
+
+------------------------------------------------------------------------
+
+::: {.callout-note collapse="true"}
+## Disclaimer
+
+The data provided on this page are experimental
+:::
+
+# Current Conditions
+
+## Row {height="10%"}
+
+```{r}
+#| content: valuebox
+#| title: "Current Water Temperature"
+
+list(
+ icon = "thermometer-half",
+ color = "primary",
+ value = current_temp
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Current Salinity"
+
+list(
+ icon = "droplet-half",
+ color = "primary",
+ value = current_salt
+)
+```
+
+```{r, echo = FALSE}
+#| content: valuebox
+#| title: "Lake Height"
+
+list(
+  icon = "moisture",
+  color = "primary",
+  #value = label_percent(accuracy = 0.1)(p_preterm)
+  value = current_depth
+)
+```
+
+## Row {height="10%"}
+
+```{r}
+#| content: valuebox
+#| title: "Average Wind Speed (last 6 hours)"
+
+list(
+ icon = "cloud-fog2",
+ color = "primary",
+ value = paste(round(wind_df$wind_speed,2), ' km/hr')
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Average Wind Direction (last 6 hours)"
+
+list(
+ icon = "compass",
+ color = "primary",
+ value = wind_df$wind_dir
+ #value = paste(round(wind_df$wind_dir,2))
+)
+```
+## Row {height="10%"}
+
+```{r}
+#| content: valuebox
+#| title: "Water Temperature Comparison to Historical Average"
+
+list(
+ icon = temp_clim_values[[2]],
+ color = "primary",
+ value = temp_clim_values[[3]]
+ )
+```
+
+```{r}
+#| content: valuebox
+#| title: "Water Salinity Comparison to Historical Average"
+
+list(
+ icon = salt_clim_values[[2]],
+ color = "primary",
+ value = salt_clim_values[[3]]
+)
+```
+
+## Row {height="10%"}
+
+```{r}
+#| content: valuebox
+#| title: "Water Temperature Comparison to Previous 10-days"
+
+list(
+ icon = temp_trend_historic[[2]],
+ color = "primary",
+ value = temp_trend_historic[[3]]
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Water Salinity Comparison to Previous 10-days"
+
+list(
+ icon = salt_trend_historic[[2]],
+ color = "primary",
+ value = salt_trend_historic[[3]]
+)
+```
+
+## Row {height="10%"}
+
+```{r}
+#| content: valuebox
+#| title: "Water Temperature Comparison to Future 10-days"
+
+list(
+ icon = temp_trend_future[[2]],
+ color = "primary",
+ value = temp_trend_future[[3]]
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Water Salinity Comparison to Future 10-days"
+
+list(
+ icon = salt_trend_future[[2]],
+ color = "primary",
+ value = salt_trend_future[[3]]
+)
+```
+
+## Row {height="30%"}
+
+```{r fig.height=5, fig.width=5, echo=FALSE, include=TRUE, message = FALSE}
+#sites <- suppressMessages(sf::st_read("sites.json"))
+
+leaflet() %>%
+ setView(lat = -32.022554, lng = 115.926847, zoom= 15) %>%
+ addTiles(group="OSM") %>%
+ addProviderTiles(providers$Esri.WorldImagery, group="Imagery") %>%
+ addProviderTiles(providers$Esri.WorldTopoMap, group="Topo Map") %>%
+ addLayersControl(baseGroups=c('Imagery','OSM', 'Topo Map')) #addMarkers(data  = sites, popup=~as.character(site_id), group = ~as.character(Partner))#, clusterOptions = markerClusterOptions())
+```
+
+## Row {height="10%"}
+
+::: card
+This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. <br /> <br />
+
+We would like to acknowledge [Water Data SA](https://water.data.sa.gov.au/) for providing observational data for the forecasts presented on this dashboard.
+
+Page last updated on `r Sys.Date()`
+:::
+
+# Water Quality Forecasts
+
+This page contains information about the water quality of Lake Alexandrina water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [VT Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data is provided by [Water Data SA](https://water.data.sa.gov.au/).
+
+All forecasts are valid for 8:00am AWST (00:00 UTC). Red dots indicate in-situ observations. The black line indicates the mean forecast predictions (both past and future), with uncertainty provided for future forecasts. Uncertainty is separated into sections of higher confidence (blue) and lower confidence (grey) based on predicted days ahead. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+#| title: 'Water Temperature'
+
+library(tidyverse)
+library(arrow)
+source('./R/dashboard_plotting_tool.R')
+
+s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+
+# obs_cleaned <- readr::read_csv(insitu_obs_url) |> 
+#   filter(variable %in% c('temperature','salt',"depth")) |> ##insitu sensors and met 
+#   #dplyr::filter(is.na(inflow_name)) |> 
+#   collect() |> 
+#   lubridate::with_tz(datetime, tzone = timezone)
+
+most_recent <-  arrow::open_dataset(s3_score) |> 
+  filter(site_id %in% c(interest_site), 
+         model_id == model_identifier) |>
+  summarize(max = max(reference_datetime)) |> 
+  collect() |> 
+  pull()
+
+#source('R/alex_target_generation.R')
+
+targets_df <- readr::read_csv(insitu_obs_url) |> 
+  filter(variable %in% c('temperature','salt','depth')) |> ##insitu sensors and met 
+  #dplyr::filter(is.na(inflow_name)) |> 
+  collect() |> 
+  mutate(variable = ifelse(variable == 'TEMP','temperature',variable)) |> 
+  lubridate::with_tz(datetime, tzone = timezone)
+
+obs_df <- targets_df |> 
+  filter(variable == 'temperature',
+         datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
+                                        timezone))
+
+# obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
+#   mutate(datetime = lubridate::with_tz(lubridate::as_datetime(datetime), 'Australia/Adelaide')) |> 
+#   filter(variable == 'temperature',
+#          datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
+#                                         'Australia/Adelaide')) |>
+#   collect()
+
+# obs_df <- arrow::open_csv_dataset(s3_targets) |> 
+#   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
+#   # filter(datetime <= obs_dates_grab,
+#   #        datetime <= most_recent) |> 
+#   filter(variable == 'temperature',
+#          datetime <= most_recent) |> 
+#   #select(datetime, observation) |> 
+#   collect() #|> 
+#   #mutate(reference_datetime = most_recent)
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "temperature",
+         depth %in% c(0.5),
+         site_id %in% interest_site,
+         horizon >= 0,
+         #reference_datetime == as.Date('1-05-25')) |> 
+         reference_datetime == (most_recent),
+         model_id == model_identifier) |>
+  dplyr::collect()
+
+
+historical_horizon <- 60 
+historical_reference_datetime <- most_recent - days(historical_horizon)
+
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+    filter(variable == "temperature",
+         depth %in% c(0.5),
+         site_id %in% interest_site,
+         horizon == 1,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent,
+         model_id == model_identifier) |> 
+  collect()
+  
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(10,30), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+#| title: 'Salinity'
+
+## SALT PLOT 
+obs_df <- targets_df |> 
+  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  # filter(datetime <= obs_dates_grab,
+  #        datetime <= most_recent) |> 
+  filter(variable == 'salt') |> 
+  #filter(datetime >= historical_reference_datetime) |> 
+  #select(datetime, observation) |> 
+  collect() |> 
+  mutate(reference_datetime = most_recent)
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "salt",
+         depth %in% c(0.5),
+         site_id %in% interest_site,
+         horizon >= 0,
+         reference_datetime == most_recent,
+         model_id == model_identifier) |>
+  dplyr::collect()
+
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+    filter(variable == "salt",
+         depth %in% c(0.5),
+         site_id %in% interest_site,
+         horizon == 1,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent,
+         model_id == model_identifier) |> 
+  collect()
+  
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(0,1), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+#| title: 'Depth'
+
+## SALT PLOT 
+obs_df <- targets_df |> 
+  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
+  # filter(datetime <= obs_dates_grab,
+  #        datetime <= most_recent) |> 
+  filter(variable == 'depth') |> 
+  mutate(observation = observation - 5.3) |> 
+  #filter(datetime >= historical_reference_datetime) |> 
+  #select(datetime, observation) |> 
+  collect() |> 
+  mutate(reference_datetime = most_recent)
+
+# score_df <- arrow::open_dataset(s3_score) |>
+#   filter(variable == "salt",
+#          depth %in% c(0.5),
+#          site_id %in% interest_site,
+#          horizon >= 0,
+#          reference_datetime == most_recent,
+#          model_id == model_identifier) |>
+#   dplyr::collect()
+# 
+# score_df_historic <- arrow::open_dataset(s3_score) |> 
+#     filter(variable == "salt",
+#          depth %in% c(0.5),
+#          site_id %in% interest_site,
+#          horizon == 1,
+#          reference_datetime >= historical_reference_datetime, 
+#          reference_datetime < most_recent,
+#          model_id == model_identifier) |> 
+#   collect()
+  
+
+# dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(0,1), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+
+
+score_df <- arrow::open_dataset(s3_score) |>
+  filter(variable == "depth",
+         site_id %in% interest_site,
+         horizon >= 0,
+         reference_datetime == most_recent,
+         model_id == model_identifier) |>
+  mutate(mean = mean - 5.3,
+         quantile10 = quantile10 - 5.3,
+         quantile90 = quantile90 - 5.3,
+         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth)
+  dplyr::collect()
+
+score_df_historic <- arrow::open_dataset(s3_score) |> 
+  filter(variable == "depth",
+         site_id %in% interest_site,
+         horizon == 1,
+         reference_datetime >= historical_reference_datetime, 
+         reference_datetime < most_recent,
+         model_id == model_identifier) |> 
+  mutate(mean = mean - 5.3,
+         quantile10 = quantile10 - 5.3,
+         quantile90 = quantile90 - 5.3,
+         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
+  collect()
+
+dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = timezone, ylims = c(0.5,0.8), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+
+```
+
+
+# Weather Forecasts
+
+This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php). Observations are provided by [Water Data SA](https://water.data.sa.gov.au/).
+
+::: {.card title="Wind Forecast with Historical Observations" height="300%"}
+All forecasts are valid for 10:30am ACDT (00:00 UTC). The red line represents observed wind speed with red arrows indicating the wind direction at each available in-situ observation. The black line represents the mean forecast predictions for wind speed with black arrows indicating the wind direction at each prediction. Both past and future wind predictions are provided. The observations and predictions shown represent six-hour averages across the time period.
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(arrow)
+library(bslib)
+library(bsicons)
+library(leaflet)
+library(graphics)
+library(jpeg)
+
+source('R/wind_plot_dashboard.R')
+source('R/degToCompass.R')
+
+lake_directory <- getwd()
+options(timeout=300)
+
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+
+# s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+
+# most_recent <-  arrow::open_dataset(s3_score) |> 
+#   filter(site_id %in% c(interest_site)) |> 
+#   summarize(max = max(reference_datetime)) |> 
+#   collect() |> 
+#   pull()
+
+## Met vizualization
+# windspeed 
+noaa_date <- most_recent - lubridate::days(1)
+noaa_df <- arrow::s3_bucket(file.path("bio230121-bucket01/flare/drivers/met/gefs-v12/stage2",paste0("reference_datetime=",noaa_date),paste0("site_id=",interest_site)),
+                 endpoint_override = 'renc.osn.xsede.org',
+                 anonymous = TRUE)
+
+air_temp_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("air_temperature")) |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
+  collect()
+
+northwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("northward_wind")) |>
+  mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
+  collect()
+
+eastwind_df <- arrow::open_dataset(noaa_df) |> 
+  dplyr::filter(variable %in% c("eastward_wind")) |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
+  collect()
+
+future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df) |> 
+  pivot_wider(names_from = variable, values_from = prediction) |> 
+  group_by(parameter, datetime) |> 
+  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
+  group_by(datetime) |> ## group across EMs
+  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
+         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
+         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
+         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
+         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
+         northwind_avg_em = median(northward_wind, na.rm = TRUE),
+         air_temp_avg_em = median((air_temperature - 273.15))) |> 
+  ungroup() |> 
+  distinct(datetime, .keep_all = TRUE) |> 
+  mutate(wind_deg = ((270-atan2(eastwind_avg_em,northwind_avg_em)*180/pi)%%360), ## ADD WIND DIRECTION
+         wind_dir = degToCompass(wind_deg)) |> 
+  select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
+
+
+
+## NOAA HISTORICAL DATA
+noaa_historical_s3 <- arrow::s3_bucket(bucket = paste0("bio230121-bucket01/flare/drivers/met/gefs-v12/stage3/site_id=",interest_site), 
+                                   endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+
+historical_date_cutoff <- noaa_date - lubridate::days(10)
+
+noaa_historical_df <- arrow::open_dataset(noaa_historical_s3) |> 
+  mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
+  filter(variable %in% c('air_temperature','northward_wind','eastward_wind'),
+         #datetime <= noaa_date, 
+         datetime > historical_date_cutoff) |>
+  collect()
+
+historical_met_df_em_avg <- noaa_historical_df |> 
+  pivot_wider(names_from = variable, values_from = prediction) |> 
+  group_by(parameter, datetime) |> 
+  mutate(windspeed = sqrt(northward_wind^2 + eastward_wind^2)) |> 
+  group_by(datetime) |> ## group across EMs
+  mutate(windspeed_median_em = median(windspeed, na.rm = TRUE),
+         #windspeed_sd_em = sd(windspeed, na.rm = TRUE),
+         windspeed_ci_025_em = quantile(windspeed, probs = c(.025)),
+         windspeed_ci_975_em = quantile(windspeed, probs = c(.975)),
+         eastwind_avg_em = median(eastward_wind, na.rm = TRUE), 
+         northwind_avg_em = median(northward_wind, na.rm = TRUE),
+         air_temp_avg_em = median((air_temperature - 273.15))) |> 
+  ungroup() |> 
+  distinct(datetime, .keep_all = TRUE) |> 
+  mutate(wind_deg = ((270-atan2(eastwind_avg_em,northwind_avg_em)*180/pi)%%360), 
+         wind_dir = degToCompass(wind_deg)) |> 
+  select(datetime, wind_speed = windspeed_median_em, wind_deg, wind_dir, air_temp = air_temp_avg_em)
+
+
+
+## READ IN WIND OBSERVATIONS
+wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(variable == 'wind_direction') |> 
+  collect() |> 
+  #mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = timezone)) |> 
+  filter(datetime > (historical_date_cutoff)) |> #, 
+         #datetime <= noaa_date) |> 
+  mutate(date = as.Date(datetime),
+         hour = lubridate::hour(datetime)) |> 
+  group_by(date, hour) |> 
+  summarise(wind_deg_obs = mean(observation, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(time = paste0(hour,':00:00'),
+         datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
+  select(datetime, wind_deg_obs)
+
+wind_velocity_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+  dplyr::filter(variable == 'wind_velocity') |> 
+  collect() |> 
+  #mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
+  mutate(datetime = lubridate::force_tz(datetime, tzone = timezone)) |>   
+  filter(datetime > (historical_date_cutoff)) |> #, 
+         #datetime < noaa_date) |>
+  mutate(date = as.Date(datetime),
+         hour = lubridate::hour(datetime)) |> 
+  group_by(date, hour) |> 
+  summarise(wind_speed_obs = mean(observation, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(time = paste0(hour,':00:00'),
+         datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
+  select(datetime, wind_speed_obs)
+
+wind_obs_df <- wind_dir_obs |> 
+  right_join(wind_velocity_obs, by = c('datetime'))
+
+historical_met_df <- historical_met_df_em_avg |> 
+  right_join(wind_obs_df, by = c('datetime')) |> 
+  drop_na(wind_deg)
+
+# JOIN historic data / obs with future
+
+future_met_df_em_avg$wind_deg_obs <- NA
+future_met_df_em_avg$wind_speed_obs <- NA
+
+full_met_data_df <- dplyr::bind_rows(historical_met_df, future_met_df_em_avg) |> 
+mutate(wind_speed = wind_speed*3.6,
+wind_speed_obs = wind_speed_obs * 3.6, 
+date = as.Date(datetime))  |> # convert wind to km/hr
+filter(!(date == noaa_date & is.na(wind_deg_obs)))
+```
+
+```{r, include=TRUE}
+##| height: 200%
+#| out-height: 350%
+#| out-width: 100%
+#| padding: 2px
+# make wind plot with arrows 
+
+wind_plot_df <- full_met_data_df |> 
+  filter(datetime > (lubridate::with_tz(most_recent, tzone = timezone) - lubridate::days(3)),
+         datetime < lubridate::with_tz(most_recent, tzone = timezone) + lubridate::days(3)) |> 
+  group_by(hour_group = lubridate::floor_date(datetime, '6 hour')) |> 
+  summarise(wind_speed_mean = mean(wind_speed, na.rm = T),
+            wind_deg_mean = mean(wind_deg, na.rm = T),
+            wind_speed_mean_obs = mean(wind_speed_obs, na.rm = T), 
+            wind_deg_mean_obs = mean(wind_deg_obs, na.rm = T)) |> 
+  ungroup() |> 
+  mutate(date = as.Date(hour_group))
+
+## MAKE TIME TO MATCH VETICAL LINE WITH LAST OBSERVATION 
+# This is added because we aggregate obs to 6 hour intervals. Most recent NOAA is valid at 10:30am ACDT, which is in between two aggregate periods (6am - 12pm). Move the transition line to match with 6am value...
+
+compass <-readJPEG('./north_arrow_black.jpg')
+
+
+weather_time_match <- lubridate::with_tz(most_recent, tzone = timezone) - 
+  lubridate::hours(4) - lubridate::minutes(30)
+
+wind_plot_x_labels <- wind_plot_df |> 
+  mutate(hour = lubridate::hour(hour_group)) |> 
+  filter(hour == 0) |> 
+  distinct(hour_group) |> 
+  pull(hour_group)
+
+#dev.new(width=6, height=4, unit="in") 
+  
+plot(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, ylim = c(0,48), cex = 0.01,   xlab = "Date",
+     ylab = "Wind Speed (km/hr)", xaxt = 'n')
+
+grid(nx = NA,
+     ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray", # Grid line color
+     lwd = 1)
+
+#axis(1, wind_plot_df$hour_group, format(wind_plot_df$hour_group, "%b %d"), cex.axis = .7)
+axis(1, at = wind_plot_x_labels, format(wind_plot_x_labels, "%b %d"))
+
+#horizontal axis
+# axis(2,
+#      #at = seq(0, 40, by = 10),
+#      tck = 1, lty = 1, col = "gray")
+# 
+# #vertical axis
+# axis(1,
+#      #at = wind_plot_df$hour_group,
+#      tck = 1, lty = 1, col = "gray")
+
+shape::Arrowhead(x0 = wind_plot_df$hour_group, 
+          y0 = wind_plot_df$wind_speed_mean, 
+          angle = wind_plot_df$wind_deg_mean, 
+          arr.length = 0.2,
+          arr.width = 0.12,
+          arr.type = 'triangle',
+          lty = 1,
+          lcol = "black",
+          )
+
+shape::Arrowhead(x0 = wind_plot_df$hour_group, 
+          y0 = wind_plot_df$wind_speed_mean_obs, 
+          angle = wind_plot_df$wind_deg_mean_obs, 
+          arr.length = 0.2,
+          arr.width = 0.12,
+          arr.type = 'triangle',
+          lty = 1,
+          lcol = "red",
+          )
+
+abline(v = weather_time_match, lty = 2, col = 'black')
+
+lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, col = 'black')
+lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean_obs, col = 'red')
+
+rasterImage(compass,
+            wind_plot_df$hour_group[length(wind_plot_df$hour_group)-2],
+            40,
+            wind_plot_df$hour_group[length(wind_plot_df$hour_group)],
+            48)
+
+legend(wind_plot_df$hour_group[1], 49.5, legend=c("Observations", "Predictions"),
+       col=c("red", "black"), lty=1:1, cex=0.75)
+
+text(weather_time_match + lubridate::hours(8), 47, 'Future', cex = 0.8)
+text(weather_time_match - lubridate::hours(6), 47, 'Past', cex = 0.8)
+title('3-day Ahead Forecast')
+```
+:::
+
+::: {.card title="Air Temperature Forecast with Historical Forecast"}
+```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+## Air Temperature
+at_ylims <- c(10,40)
+at_var_title = 'Air Temperature'
+at_var_unit = 'Temperature (°C)' 
+
+at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
+  ggplot2::ylim(at_ylims) +
+  ggplot2::xlim(most_recent - lubridate::days(10), most_recent + lubridate::days(14)) +
+  ggplot2::geom_line(ggplot2::aes(y = air_temp), color = 'black') +
+  #ggplot2::geom_point(ggplot2::aes(x = datetime, y = wind_deg_obs), color = 'red') +
+  ggplot2::geom_vline(aes(xintercept = most_recent),
+                      alpha = 1, linetype = "dashed") +
+  ggplot2::annotate(x = (most_recent - lubridate::days(2)), y = max(at_ylims) - 1, label = 'Past', geom = 'text') +
+  ggplot2::annotate(x = (most_recent + lubridate::days(2)), y = max(at_ylims) - 1, label = 'Future', geom = 'text') +
+  ggplot2::theme_light() +
+  ggplot2::scale_linetype_manual(name = "",
+                                 values = c('solid'),
+                                 labels = c('Forecast Date')) +
+  ggplot2::scale_y_continuous(name = at_var_unit,
+                              limits = at_ylims) +
+  ggplot2::labs(x = "Date",
+                y = at_var_unit,
+                title = paste0("14-day Ahead Forecast")) +#,
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
+                 plot.title = element_text(hjust = 0.5))
+
+at_plot
+```
+:::
+
+# Learn more
+
+See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the [Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/) at Virginia Tech.
+
+::: {.card title = "Documentation for Canning Wier Pool Forecasts"}
+
+We provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
+
+We maintain and deploy the FLARE model framework to create our water quality forecasts. More information on the FLARE project can be found [here](https://flare-forecast.org/)
+
+:::
+
+::: {.card title = "Relevant Research from the Center for Ecosystem Forecasting"}
+
+Publications and other information about [Lake Alexandrina](https://www.ltreb-reservoirs.org/products/#publications-forecasting-and-modeling).
+
+Learn more about the ongoing research at the Center for Ecosystem Forecasting [here](https://ecoforecast.centers.vt.edu/research.html).
+
+:::
