@@ -31,7 +31,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                   date = as.Date(datetime)) |>#,
     dplyr::filter(datetime >= reference_datetime) |>
     rename(forecast_mean = mean, forecast_sd = sd, forecast_upper_90 = quantile90, forecast_lower_90 = quantile10,
-           observed = observation, forecast_start_day = reference_datetime)
+           forecast_start_day = reference_datetime)
   
   historic_tibble <- historic_data |>
     dplyr::filter(depth %in% depths) |>
@@ -43,19 +43,19 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                   quantile10 = NA) |>#,
     #dplyr::filter(datetime >= reference_datetime) |>
     rename(forecast_mean = mean, forecast_sd = sd, forecast_upper_90 = quantile90, forecast_lower_90 = quantile10,
-           observed = observation, forecast_start_day = reference_datetime)
+           forecast_start_day = reference_datetime)
   
   
   combined_tibble <- dplyr::bind_rows(curr_tibble, historic_tibble) |> 
-    arrange(datetime, observed) |> 
+    arrange(datetime, observation) |> 
     distinct(date, .keep_all = TRUE)
   
   priority_date_cutoff <- lubridate::with_tz(as.Date(most_recent),tzone) + lubridate::days(forecast_horizon_confidence) ## how many days into the forecast do we think we are confident? ALEX we had said 10
-
+  
   primary_forecast_dates <- combined_tibble |> 
-  #filter(date >= as.Date(most_recent)) |> 
-  mutate(date_fill = dplyr::if_else((date <= as.Date(priority_date_cutoff) & date >= as.Date(most_recent)), date, NA)) |> 
-  pull(date_fill)
+    #filter(date >= as.Date(most_recent)) |> 
+    mutate(date_fill = dplyr::if_else((date <= as.Date(priority_date_cutoff) & date >= as.Date(most_recent)), date, NA)) |> 
+    pull(date_fill)
   
   secondary_forecast_dates <- combined_tibble |> 
     mutate(date_fill = dplyr::if_else(date >= as.Date(priority_date_cutoff), date, NA)) |> 
@@ -91,20 +91,25 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     xlims <- c(as.Date(min(combined_tibble$date)) - 30 , (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
     obs_hist <- obs_hist |> 
       filter(datetime > min(combined_tibble$datetime) - lubridate::days(30)) |> 
-      select(-site_id)
+      select(-any_of(c('site_id')))
     
-    } else {
+  } else {
     xlims <- c(as.Date(min(combined_tibble$date)), (as.Date(max(combined_tibble$date)) + lubridate::days(5)))
     obs_hist <- obs_hist |> 
       filter(datetime > min(combined_tibble$datetime)) |> 
-      select(-site_id)
+      select(-any_of(c('site_id')))
     
-    }
+  }
   
-  combined_tibble <- combined_tibble |> 
-    full_join(obs_hist, by = c('datetime','depth','variable')) |> 
-    mutate(observed = ifelse(is.na(observed), observation, observed), 
-           date = as.Date(datetime))
+  obs_hist <- obs_hist |> 
+    rename(observation_targets = observation) #|> 
+    #select(datetime, observation_targets)
+  
+  combined_tibble <- combined_tibble |>
+    full_join(obs_hist, by = c('datetime', 'variable', 'depth')) |>
+    mutate(date = as.Date(datetime)) |> 
+    mutate(observation = ifelse(is.na(observation), observation_targets, observation), # fill in any missing data from scores with targets
+          date = as.Date(datetime))
   
   
   ## identify climatology values for time period using historical observations
@@ -113,7 +118,7 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     pull(doy)
   
   obs_climatology <- obs_hist_full |>
-    mutate(datetime = lubridate::force_tz(datetime, tzone = "Australia/Adelaide")) |>
+    mutate(datetime = lubridate::force_tz(datetime, tzone = tzone)) |>
     mutate(doy = lubridate::yday(datetime)) |>
     filter(doy %in% interest_days_doy) |>
     # mutate(`historical mean` = mean(observation, na.rm = TRUE)) |>
@@ -175,10 +180,10 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::xlim(xlims) +
       ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
       ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
-      #ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
+      ##ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean_historical, color = 'Historical One-Day-\nAhead Predictions'), size = 0.5, linetype = 'solid') +
       ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'Historical Average'), size = 0.5, linetype = 'longdash', size = 0.5) +
-      ggplot2::geom_point(ggplot2::aes(y = observed), color = 'red') +
+      ggplot2::geom_point(ggplot2::aes(y = observation), color = 'red') +
       ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), tzone)), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions'))+

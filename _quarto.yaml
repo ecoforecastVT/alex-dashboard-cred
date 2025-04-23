@@ -1,40 +1,20 @@
 project:
   type: website
   output-dir: docs
+  render: 
+    - alex_dashboard.qmd
 
 website:
   title: "Lake Alexandrina Dashboard"
   page-navigation: true
   repo-url: https://github.com/flare-forecast/alex-dashboard
   repo-actions: [source, issue]
-
-  navbar:
-    background: primary
+  sidebar:
+    style: docked
     search: true
-    left:
-      - href: index.qmd
-        icon: info-square
-      - href: water.qmd
-        icon: droplet
-      - href: weather.qmd
-        icon: brightness-high-fill
-      - href: learn-more.qmd
-        icon: globe
-
-  page-footer:
-    left: "CC-BY"
-    right:
-      - icon: github
-        href: https://github.com/FLARE-forecast/alex-dashboard
-
-format:
-  html:
-    theme: [cerulean, custom.scss]
-    css: styles.css
-    title-block-style: default
-    title-block-banner: "img/banner.jpg"
-    title-block-banner-color: white
-    page-layout: full
-    toc: true
+    background: primary
+    foreground: primary
+    border: true
 
 editor: visual
+brand: _brand.yaml
