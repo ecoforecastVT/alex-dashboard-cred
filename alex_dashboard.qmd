@@ -287,6 +287,17 @@ list(
 )
 ```
 
+```{r}
+#| content: valuebox
+#| title: "Lake Height Comparison to Historical Average"
+
+list(
+ icon = height_clim_values[[2]],
+ color = "primary",
+ value = height_clim_values[[3]]
+)
+```
+
 ## Row {height="10%"}
 
 ```{r}
@@ -308,6 +319,16 @@ list(
  icon = salt_trend_historic[[2]],
  color = "primary",
  value = salt_trend_historic[[3]]
+)
+```
+```{r}
+#| content: valuebox
+#| title: "Lake Height Comparison to Previous 10-days"
+
+list(
+ icon = height_trend_historic[[2]],
+ color = "primary",
+ value = height_trend_historic[[3]]
 )
 ```
 
@@ -334,6 +355,18 @@ list(
  value = salt_trend_future[[3]]
 )
 ```
+
+```{r}
+#| content: valuebox
+#| title: "Lake Height Comparison to Future 10-days"
+
+list(
+ icon = height_trend_future[[2]],
+ color = "primary",
+ value = height_trend_future[[3]]
+)
+```
+
 
 ## Row {height="30%"}
 
