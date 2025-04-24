@@ -203,11 +203,13 @@ The data provided on this page are experimental
 
 # Current Conditions
 
+Current Water Conditions 
+
 ## Row {height="10%"}
 
 ```{r}
 #| content: valuebox
-#| title: "Current Water Temperature"
+#| title: "Water Temperature"
 
 list(
  icon = "thermometer-half",
@@ -218,7 +220,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Current Salinity"
+#| title: "Salinity"
 
 list(
  icon = "droplet-half",
@@ -238,6 +240,9 @@ list(
   value = current_depth
 )
 ```
+
+## Row {height="2%"}
+Current Wind Conditions 
 
 ## Row {height="10%"}
 
@@ -263,11 +268,15 @@ list(
  #value = paste(round(wind_df$wind_dir,2))
 )
 ```
+
+## Row {height="2%"}
+Comparison to Historical Average
+
 ## Row {height="10%"}
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature Comparison to Historical Average"
+#| title: "Water Temperature"
 
 list(
  icon = temp_clim_values[[2]],
@@ -278,7 +287,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity Comparison to Historical Average"
+#| title: "Water Salinity"
 
 list(
  icon = salt_clim_values[[2]],
@@ -289,7 +298,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Lake Height Comparison to Historical Average"
+#| title: "Lake Height"
 
 list(
  icon = height_clim_values[[2]],
@@ -298,11 +307,14 @@ list(
 )
 ```
 
+## Row {height="2%"}
+Comparison to Previous 10-days
+
 ## Row {height="10%"}
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature Comparison to Previous 10-days"
+#| title: "Water Temperature"
 
 list(
  icon = temp_trend_historic[[2]],
@@ -313,7 +325,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity Comparison to Previous 10-days"
+#| title: "Water Salinity"
 
 list(
  icon = salt_trend_historic[[2]],
@@ -323,7 +335,7 @@ list(
 ```
 ```{r}
 #| content: valuebox
-#| title: "Lake Height Comparison to Previous 10-days"
+#| title: "Lake Height"
 
 list(
  icon = height_trend_historic[[2]],
@@ -332,11 +344,14 @@ list(
 )
 ```
 
+## Row {height="2%"}
+Future 10-day Trend
+
 ## Row {height="10%"}
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature Comparison to Future 10-days"
+#| title: "Water Temperature"
 
 list(
  icon = temp_trend_future[[2]],
@@ -347,7 +362,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity Comparison to Future 10-days"
+#| title: "Water Salinity"
 
 list(
  icon = salt_trend_future[[2]],
@@ -358,7 +373,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Lake Height Comparison to Future 10-days"
+#| title: "Lake Height"
 
 list(
  icon = height_trend_future[[2]],
@@ -368,8 +383,11 @@ list(
 ```
 
 
-## Row {height="30%"}
+## Row {height="2%"}
 
+The observed data are from [SA Water](https://www.sawater.com.au/) at the locations in the map below
+
+## Row {height="30%"}
 ```{r, include=FALSE}
 sites <- suppressMessages(sf::st_read("sites.json"))
 ```
