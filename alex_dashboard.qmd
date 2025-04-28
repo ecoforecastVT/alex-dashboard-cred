@@ -41,7 +41,7 @@ source('R/historic_trend_calc.R')
 lake_directory <- getwd()
 options(timeout=300)
 
-insitu_obs_url<- "https://renc.osn.xsede.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-insitu.csv"
+insitu_obs_url<- "https://amnh1.osn.mghpcc.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-insitu.csv"
 
 obs_cleaned <- readr::read_csv(insitu_obs_url) |> 
   filter(variable %in% c('temperature','salt', 'depth')) |> #, # was TEMP for CANN
@@ -137,7 +137,7 @@ source('./R/degToCompass.R')
 #   filter(row_number() == n()) |> 
 #   pull(datetime)
 
-met_url <- "https://renc.osn.xsede.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-met.csv"
+met_url <- "https://amnh1.osn.mghpcc.org/bio230121-bucket01/flare/targets/ALEX/ALEX-targets-met.csv"
 wind_targets <- readr::read_csv(met_url) |> 
   dplyr::filter(variable %in% c('wind_velocity','wind_direction')) |> ## CANN uses "wind_speed" 
   collect() |> 
@@ -427,8 +427,8 @@ library(tidyverse)
 library(arrow)
 source('./R/dashboard_plotting_tool.R')
 
-s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
-s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", endpoint_override = "amnh1.osn.mghpcc.org", anonymous = TRUE)
+s3_forecast <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/forecasts/parquet", endpoint_override = "amnh1.osn.mghpcc.org", anonymous = TRUE)
 
 # obs_cleaned <- readr::read_csv(insitu_obs_url) |> 
 #   filter(variable %in% c('temperature','salt',"depth")) |> ##insitu sensors and met 
@@ -645,7 +645,7 @@ knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 # windspeed 
 noaa_date <- most_recent - lubridate::days(1)
 noaa_df <- arrow::s3_bucket(file.path("bio230121-bucket01/flare/drivers/met/gefs-v12/stage2",paste0("reference_datetime=",noaa_date),paste0("site_id=",interest_site)),
-                 endpoint_override = 'renc.osn.xsede.org',
+                 endpoint_override = 'amnh1.osn.mghpcc.org',
                  anonymous = TRUE)
 
 air_temp_df <- arrow::open_dataset(noaa_df) |> 
@@ -685,7 +685,7 @@ future_met_df_em_avg <- dplyr::bind_rows(northwind_df, eastwind_df, air_temp_df)
 
 ## NOAA HISTORICAL DATA
 noaa_historical_s3 <- arrow::s3_bucket(bucket = paste0("bio230121-bucket01/flare/drivers/met/gefs-v12/stage3/site_id=",interest_site), 
-                                   endpoint_override = "renc.osn.xsede.org", anonymous = TRUE)
+                                   endpoint_override = "amnh1.osn.mghpcc.org", anonymous = TRUE)
 
 historical_date_cutoff <- noaa_date - lubridate::days(10)
 
@@ -717,7 +717,7 @@ historical_met_df_em_avg <- noaa_historical_df |>
 
 
 ## READ IN WIND OBSERVATIONS
-wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'amnh1.osn.mghpcc.org', anonymous = TRUE)) |> 
   dplyr::filter(variable == 'wind_direction') |> 
   collect() |> 
   #mutate(datetime = lubridate::with_tz(datetime, tzone = timezone)) |> 
@@ -733,7 +733,7 @@ wind_dir_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/fla
          datetime = as.POSIXct(paste(date,time), format="%Y-%m-%d %H:%M:%S")) |> 
   select(datetime, wind_deg_obs)
 
-wind_velocity_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'renc.osn.xsede.org', anonymous = TRUE)) |> 
+wind_velocity_obs <- arrow::open_csv_dataset(arrow::s3_bucket('bio230121-bucket01/flare/targets/ALEX/', endpoint_override = 'amnh1.osn.mghpcc.org', anonymous = TRUE)) |> 
   dplyr::filter(variable == 'wind_velocity') |> 
   collect() |> 
   #mutate(datetime = lubridate::with_tz(datetime, tzone = "Australia/Adelaide")) |> 
