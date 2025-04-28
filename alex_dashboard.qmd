@@ -260,7 +260,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Average Wind Direction (last 6 hours)"
+#| title: "Average Origin Wind Direction (last 6 hours)"
 
 list(
  icon = "compass",
