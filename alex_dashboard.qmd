@@ -203,7 +203,7 @@ The data provided on this page are experimental
 
 # Current Conditions
 
-Current Water Conditions 
+Current Water Conditions
 
 ## Row {height="10%"}
 
@@ -242,7 +242,8 @@ list(
 ```
 
 ## Row {height="2%"}
-Current Wind Conditions 
+
+Current Wind Conditions
 
 ## Row {height="10%"}
 
@@ -259,7 +260,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Average Wind Direction (last 6 hours)"
+#| title: "Average Origin Wind Direction (last 6 hours)"
 
 list(
  icon = "compass",
@@ -270,6 +271,7 @@ list(
 ```
 
 ## Row {height="2%"}
+
 Comparison to Historical Average
 
 ## Row {height="10%"}
@@ -308,6 +310,7 @@ list(
 ```
 
 ## Row {height="2%"}
+
 Comparison to Previous 10-days
 
 ## Row {height="10%"}
@@ -333,6 +336,7 @@ list(
  value = salt_trend_historic[[3]]
 )
 ```
+
 ```{r}
 #| content: valuebox
 #| title: "Lake Height"
@@ -345,6 +349,7 @@ list(
 ```
 
 ## Row {height="2%"}
+
 Future 10-day Trend
 
 ## Row {height="10%"}
@@ -382,12 +387,12 @@ list(
 )
 ```
 
-
 ## Row {height="2%"}
 
 The observed data are from [SA Water](https://www.sawater.com.au/) at the locations in the map below
 
 ## Row {height="30%"}
+
 ```{r, include=FALSE}
 sites <- suppressMessages(sf::st_read("sites.json"))
 ```
@@ -540,7 +545,6 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
 dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(0,1), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```
 
-
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 #| title: 'Depth'
 
@@ -607,7 +611,6 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
 dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(NA), tzone = timezone, ylims = c(0.5,0.8), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
-
 
 # Weather Forecasts
 
@@ -781,8 +784,11 @@ wind_plot_df <- full_met_data_df |>
   group_by(hour_group = lubridate::floor_date(datetime, '6 hour')) |> 
   summarise(wind_speed_mean = mean(wind_speed, na.rm = T),
             wind_deg_mean = mean(wind_deg, na.rm = T),
+            wind_deg_mean_adjusted = (mean(wind_deg, na.rm = T) + 180) %% 360,
             wind_speed_mean_obs = mean(wind_speed_obs, na.rm = T), 
-            wind_deg_mean_obs = mean(wind_deg_obs, na.rm = T)) |> 
+            wind_deg_mean_obs = mean(wind_deg_obs, na.rm = T),
+            wind_deg_mean_obs_adjusted = (mean(wind_deg_obs, na.rm = T) + 180) %% 360,
+) |> 
   ungroup() |> 
   mutate(date = as.Date(hour_group))
 
@@ -827,7 +833,7 @@ axis(1, at = wind_plot_x_labels, format(wind_plot_x_labels, "%b %d"))
 
 shape::Arrowhead(x0 = wind_plot_df$hour_group, 
           y0 = wind_plot_df$wind_speed_mean, 
-          angle = wind_plot_df$wind_deg_mean, 
+          angle = wind_plot_df$wind_deg_mean_adjusted, 
           arr.length = 0.2,
           arr.width = 0.12,
           arr.type = 'triangle',
@@ -837,7 +843,7 @@ shape::Arrowhead(x0 = wind_plot_df$hour_group,
 
 shape::Arrowhead(x0 = wind_plot_df$hour_group, 
           y0 = wind_plot_df$wind_speed_mean_obs, 
-          angle = wind_plot_df$wind_deg_mean_obs, 
+          angle = wind_plot_df$wind_deg_mean_obs_adjusted, 
           arr.length = 0.2,
           arr.width = 0.12,
           arr.type = 'triangle',
