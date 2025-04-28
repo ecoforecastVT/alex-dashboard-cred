@@ -14,8 +14,8 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     var_unit = 'Salinity (ppt)'
     label_height_adjust <- 0.01
   } else if(data_var == 'depth'){
-    var_title = 'Lake Depth'
-    var_unit = 'Depth (AHD)' 
+    var_title = 'Lake Height'
+    var_unit = 'Height (AHD)' 
     label_height_adjust <- 0.01
   } else{
     var_title = 'Water Quality Variable'
