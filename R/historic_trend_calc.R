@@ -1,7 +1,7 @@
 historic_trend_calc <- function(day_of_interest, interest_var, days_historic, interest_site){
   
   s3_score <- arrow::s3_bucket(bucket = "bio230121-bucket01/flare/scores/parquet", 
-                               endpoint_override = "renc.osn.xsede.org", 
+                               endpoint_override = "amnh1.osn.mghpcc.org", 
                                anonymous = TRUE)
   
   if(interest_var == 'depth'){
