@@ -908,7 +908,7 @@ at_plot
 
 See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the [Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/) at Virginia Tech.
 
-::: {.card title = "Documentation for Canning Wier Pool Forecasts"}
+::: {.card title = "Documentation for Lake Alexandrina Forecasts"}
 
 We provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
 
