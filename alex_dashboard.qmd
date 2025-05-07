@@ -187,7 +187,7 @@ wind_speed_obs <- wind_targets |>
 
 ##  {.sidebar}
 
-Data for Canning Weir Pool:
+Data for Lake Alexandrina:
 
 |                      |                   |
 |----------------------|-------------------|
@@ -421,7 +421,7 @@ Page last updated on `r Sys.Date()`
 
 # Water Quality Forecasts
 
-This page contains information about the water quality of Lake Alexandrina water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [VT Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data is provided by [Water Data SA](https://water.data.sa.gov.au/).
+This page contains information about the water quality of Lake Alexandrina. Water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [VT Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data are provided by [Water Data SA](https://water.data.sa.gov.au/).
 
 All forecasts are valid for 8:00am AWST (00:00 UTC). Red dots indicate in-situ observations. The black line indicates the mean forecast predictions (both past and future), with uncertainty provided for future forecasts. Uncertainty is separated into sections of higher confidence (blue) and lower confidence (grey) based on predicted days ahead. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
 
@@ -807,10 +807,10 @@ wind_plot_x_labels <- wind_plot_df |>
   distinct(hour_group) |> 
   pull(hour_group)
 
-#dev.new(width=6, height=4, unit="in") 
+#dev.new(width=5, height=4, unit="in") 
   
 plot(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, ylim = c(0,48), cex = 0.01,   xlab = "Date",
-     ylab = "Wind Speed (km/hr)", xaxt = 'n')
+     ylab = "Wind Speed (km/hr)", xaxt = 'n', cex.lab=0.9)
 
 grid(nx = NA,
      ny = NULL,
@@ -857,17 +857,17 @@ lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, col = 'black')
 lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean_obs, col = 'red')
 
 rasterImage(compass,
-            wind_plot_df$hour_group[length(wind_plot_df$hour_group)-2],
+            wind_plot_df$hour_group[length(wind_plot_df$hour_group)-1],
             40,
             wind_plot_df$hour_group[length(wind_plot_df$hour_group)],
-            48)
+            49)
 
 legend(wind_plot_df$hour_group[1], 49.5, legend=c("Observations", "Predictions"),
        col=c("red", "black"), lty=1:1, cex=0.75)
 
 text(weather_time_match + lubridate::hours(8), 47, 'Future', cex = 0.8)
 text(weather_time_match - lubridate::hours(6), 47, 'Past', cex = 0.8)
-title('3-day Ahead Forecast')
+title('3-day Ahead Forecast', cex.main = 0.9)
 ```
 :::
 
