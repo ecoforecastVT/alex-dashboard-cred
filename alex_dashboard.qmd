@@ -875,9 +875,12 @@ title('3-day Ahead Forecast', cex.main = 0.9)
 ```{r, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 
 ## Air Temperature
-at_ylims <- c(10,40)
 at_var_title = 'Air Temperature'
 at_var_unit = 'Temperature (°C)' 
+
+at_max_ylim <- round(max(full_met_data_df$air_temp, na.rm = TRUE)) + 5
+at_min_ylim <- round(min(full_met_data_df$air_temp, na.rm = TRUE)) - 3
+at_ylims <- c(at_min_ylim, at_max_ylim)
 
 at_plot <- ggplot2::ggplot(full_met_data_df, ggplot2::aes(x = datetime)) +
   ggplot2::ylim(at_ylims) +
