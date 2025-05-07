@@ -857,10 +857,10 @@ lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean, col = 'black')
 lines(wind_plot_df$hour_group, wind_plot_df$wind_speed_mean_obs, col = 'red')
 
 rasterImage(compass,
-            wind_plot_df$hour_group[length(wind_plot_df$hour_group)-2],
-            32,
+            wind_plot_df$hour_group[length(wind_plot_df$hour_group)-1],
+            40,
             wind_plot_df$hour_group[length(wind_plot_df$hour_group)],
-            48)
+            49)
 
 legend(wind_plot_df$hour_group[1], 49.5, legend=c("Observations", "Predictions"),
        col=c("red", "black"), lty=1:1, cex=0.75)
