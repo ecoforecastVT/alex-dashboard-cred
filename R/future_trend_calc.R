@@ -35,7 +35,7 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
              horizon >= 0,
              horizon <= days_ahead,
              reference_datetime == (day_of_interest),
-             model_id == 'glm_flare_v3') |>
+             model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
       mutate(rownum = row_number())
     
@@ -47,7 +47,7 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
              horizon == 0,
              datetime >= past_reference_datetime,
              datetime <= day_of_interest,
-             model_id == 'glm_flare_v3') |> 
+             model_id == 'glm_flare_v3_crest') |> 
       dplyr::collect() |> 
       summarise(mean_var = var(mean)) |> 
       pull(mean_var)

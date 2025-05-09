@@ -9,7 +9,7 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
       filter(variable == interest_var,
              site_id %in% interest_site,
              horizon == 0,
-             model_id == 'glm_flare_v3') |>
+             model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
       mutate(rownum = row_number())
@@ -23,7 +23,7 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
              horizon == 0,
              datetime >= past_reference_datetime,
              datetime <= trend_calculation_date_start,
-             model_id == 'glm_flare_v3') |> 
+             model_id == 'glm_flare_v3_crest') |> 
       dplyr::collect() |> 
       summarise(mean_var = var(mean)) |> 
       pull(mean_var)
@@ -34,7 +34,7 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
              site_id %in% interest_site,
              horizon == 0,
              depth %in% c(0.5),
-             model_id == 'glm_flare_v3') |>
+             model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
       mutate(rownum = row_number())
@@ -49,7 +49,7 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
              horizon == 0,
              datetime >= past_reference_datetime,
              datetime <= trend_calculation_date_start,
-             model_id == 'glm_flare_v3') |> 
+             model_id == 'glm_flare_v3_crest') |> 
       dplyr::collect() |> 
       summarise(mean_var = var(mean)) |> 
       pull(mean_var)
