@@ -30,6 +30,10 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
       summarise(mean_var = var(mean)) |> 
       pull(mean_var)
     
+    if(is.na(past_variance)){
+      past_variance = 0
+    }
+    
   } else {
     score_df <- arrow::open_dataset(s3_score) |>
       filter(variable == interest_var,
