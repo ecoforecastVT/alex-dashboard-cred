@@ -13,7 +13,8 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
            reference_datetime == (day_of_interest),
            model_id == 'glm_flare_v3') |>
     dplyr::collect() |> 
-    mutate(rownum = row_number())
+    mutate(rownum = row_number()) |> 
+    arrange(datetime)
   
   past_reference_datetime <- day_of_interest - lubridate::days(days_ahead)
   past_variance <- arrow::open_dataset(s3_score) |> 
@@ -37,7 +38,8 @@ future_trend_calc <- function(day_of_interest, interest_var, days_ahead, interes
              reference_datetime == (day_of_interest),
              model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
-      mutate(rownum = row_number())
+      mutate(rownum = row_number()) |> 
+      arrange(datetime)
     
     past_reference_datetime <- day_of_interest - lubridate::days(days_ahead)
     past_variance <- arrow::open_dataset(s3_score) |> 
