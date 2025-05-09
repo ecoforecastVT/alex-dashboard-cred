@@ -12,7 +12,9 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
              model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
-      mutate(rownum = row_number())
+      mutate(rownum = row_number()) |> 
+      arrange(reference_datetime)
+    
     
     past_reference_datetime <- day_of_interest - lubridate::days(days_historic + days_historic) ## set it to be two periods ago (use period before trend calculation)
     trend_calculation_date_start <- day_of_interest - lubridate::days(days_historic)
@@ -37,7 +39,8 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
              model_id == 'glm_flare_v3_crest') |>
       dplyr::collect() |> 
       filter(datetime >= (day_of_interest - lubridate::days(days_historic))) |> 
-      mutate(rownum = row_number())
+      mutate(rownum = row_number()) |> 
+      arrange(reference_datetime)
     
     past_reference_datetime <- day_of_interest - lubridate::days(days_historic + days_historic) ## set it to be two periods ago (use period before trend calculation)
     trend_calculation_date_start <- day_of_interest - lubridate::days(days_historic)
@@ -53,6 +56,10 @@ historic_trend_calc <- function(day_of_interest, interest_var, days_historic, in
       dplyr::collect() |> 
       summarise(mean_var = var(mean)) |> 
       pull(mean_var)
+    
+    if(is.na(past_variance)){
+      past_variance = 0
+    }
   }
   ## FIGURE OUT THE CRITERIA WE WANT TO USE FOR THE TREND SIGNIFICANCE
   
