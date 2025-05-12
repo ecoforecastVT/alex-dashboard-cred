@@ -620,7 +620,7 @@ This page contains information about weather in the Lake Alexandrina area. Weath
 ::: {.card title="Wind Forecast with Historical Observations" height="300%"}
 All forecasts are valid for 10:30am ACDT (00:00 UTC). The red line represents observed wind speed with red arrows indicating the wind direction at each available in-situ observation. The black line represents the mean forecast predictions for wind speed with black arrows indicating the wind direction at each prediction. Both past and future wind predictions are provided. The observations and predictions shown represent six-hour averages across the time period.
 
-```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(arrow)
 library(bslib)
