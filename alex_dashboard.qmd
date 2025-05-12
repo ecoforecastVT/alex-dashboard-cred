@@ -30,7 +30,8 @@ build_day <- Sys.Date()
 
 timezone <- 'Australia/Adelaide'
 
-model_identifier = 'glm_flare_v3'
+#model_identifier = 'glm_flare_v3'
+model_identifier = 'glm_flare_v3_crest'
 interest_site <- 'ALEX'
 
 source('R/climatology_calc.R')
