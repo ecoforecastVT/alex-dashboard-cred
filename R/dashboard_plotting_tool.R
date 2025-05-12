@@ -132,7 +132,8 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     mutate(doy = lubridate::yday(date)) |>
     right_join(obs_climatology, by = c('doy')) |> 
     mutate(forecast_mean_historical = ifelse(date <= Sys.Date(), forecast_mean, NA),
-           forecast_mean = ifelse(date < Sys.Date(),NA,forecast_mean))   # split historical and future forecasts into two separate columns
+           forecast_mean = ifelse(date < Sys.Date(),NA,forecast_mean),
+           date = as.Date(datetime))   # split historical and future forecasts into two separate columns
   
   if (num_depths > 1){
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
@@ -178,15 +179,19 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     p <- ggplot2::ggplot(combined_tibble, ggplot2::aes(x = as.Date(date))) +
       ggplot2::ylim(ylims) +
       ggplot2::xlim(xlims) +
-      ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
-      ggplot2::geom_ribbon(ggplot2::aes(x = secondary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'grey', fill = 'grey') +
+      #ggplot2::geom_ribbon(ggplot2::aes(x = primary_dates, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'lightblue', fill = 'lightblue') +
+      ggplot2::geom_ribbon(ggplot2::aes(x = date, ymin = forecast_lower_90, ymax = forecast_upper_90), color = 'black', fill = 'grey') +
+      ggplot2::geom_ribbon(ggplot2::aes(x = date, ymin = down_q10, ymax = down_q90), color = 'indianred', fill = 'indianred', alpha=0.1) +
+      ggplot2::geom_ribbon(ggplot2::aes(x = date, ymin = up_q10, ymax = up_q90), color = 'palegreen4', fill = 'palegreen4', alpha=0.1) +
       ##ggplot2::geom_line(ggplot2::aes(y = `historical mean`), color = 'darkslategrey', size = 0.5, linetype = 'longdash') +
       ggplot2::geom_line(ggplot2::aes(y = forecast_mean_historical, color = 'Historical One-Day-\nAhead Predictions'), size = 0.5, linetype = 'solid') +
       ggplot2::geom_line(ggplot2::aes(y = `historical mean`, color = 'Historical Average'), size = 0.5, linetype = 'longdash', size = 0.5) +
       ggplot2::geom_point(ggplot2::aes(y = observation), color = 'red') +
       ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), tzone)), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
-      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions'))+
+      ggplot2::geom_line(ggplot2::aes(y = down_median, color = 'Lower Barrages by 0.1 m'))+
+      ggplot2::geom_line(ggplot2::aes(y = up_median, color = 'Raise Barrages by 0.1 m'))+
+      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions at Current Barrage Height'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
       ggplot2::annotate(x = as.Date(most_recent + 96*60*80), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
       ggplot2::theme_light() +
@@ -200,12 +205,18 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                     title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       # scale_colour_manual("", 
       #                     values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
-      scale_color_manual("", values = c("Future Predictions"="black", 
+      scale_color_manual("", values = c("Future Predictions at Current Barrage Height"="black", 
+                                        "Lower Barrages by 0.1 m"="indianred",
+                                        "Raise Barrages by 0.1 m"="palegreen4",
                                         "Historical One-Day-\nAhead Predictions" ="slategrey", 
-                                        "Historical Average" = "firebrick4")) +
+                                        "Historical Average" = "royalblue4")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
-                     plot.title = element_text(hjust = 0.5)) #+
-    #scale_fill_discrete(labels=c('Forecast', 'Historical'))
+                     plot.title = element_text(hjust = 0.5)) +
+    scale_fill_discrete(limits=c('Future Predictions at Current Barrage Height', 
+                                 'Lower Barrages by 0.1 m', 
+                                 "Raise Barrages by 0.1 m",
+                                 "Historical One-Day-\nAhead Predictions",
+                                 "Historical Average"))
   }
   
   return(p)
