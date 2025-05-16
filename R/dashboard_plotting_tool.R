@@ -14,8 +14,8 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
     var_unit = 'Salinity (ppt)'
     label_height_adjust <- 0.01
   } else if(data_var == 'depth'){
-    var_title = 'Lake Height'
-    var_unit = 'Height (AHD)' 
+    var_title = 'Lake Level'
+    var_unit = 'Lake level (m, above AHD)' 
     label_height_adjust <- 0.01
   } else{
     var_title = 'Water Quality Variable'
@@ -189,9 +189,9 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
       ggplot2::geom_point(ggplot2::aes(y = observation), color = 'red') +
       ggplot2::geom_vline(aes(xintercept = as.Date(lubridate::as_datetime(most_recent), tzone)), alpha = 1, linetype = "solid") +
       #ggplot2::geom_line(ggplot2::aes(y = forecast_mean), color = 'black')+
-      ggplot2::geom_line(ggplot2::aes(y = down_median, color = 'Lower Barrages by 0.1 m'))+
-      ggplot2::geom_line(ggplot2::aes(y = up_median, color = 'Raise Barrages by 0.1 m'))+
-      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions at Current Barrage Height'))+
+      ggplot2::geom_line(ggplot2::aes(y = down_median, color = 'More Barrage Gates Open'))+
+      ggplot2::geom_line(ggplot2::aes(y = up_median, color = 'More Barrage Gates Closed'))+
+      ggplot2::geom_line(ggplot2::aes(y = forecast_mean, color = 'Future Predictions With No Change To Barrage Gates'))+
       ggplot2::annotate(x = as.Date(most_recent - 96*60*60), y = max(ylims) - label_height_adjust, label = 'Past', geom = 'text') +
       ggplot2::annotate(x = as.Date(most_recent + 96*60*80), y = max(ylims) - label_height_adjust, label = 'Future', geom = 'text') +
       ggplot2::theme_light() +
@@ -205,16 +205,16 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
                     title = paste0(var_title," Forecast, ", lubridate::date(most_recent)), '(30-days ahead)') +
       # scale_colour_manual("", 
       #                     values = c("forecast_mean"="black", `historical mean` ="darkslategrey")) +
-      scale_color_manual("", values = c("Future Predictions at Current Barrage Height"="black", 
-                                        "Lower Barrages by 0.1 m"="indianred",
-                                        "Raise Barrages by 0.1 m"="palegreen4",
+      scale_color_manual("", values = c("Future Predictions With No Change To Barrage Gates"="black", 
+                                        "More Barrage Gates Open"="indianred",
+                                        "More Barrage Gates Closed"="palegreen4",
                                         "Historical One-Day-\nAhead Predictions" ="slategrey", 
                                         "Historical Average" = "royalblue4")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      plot.title = element_text(hjust = 0.5)) +
-    scale_fill_discrete(limits=c('Future Predictions at Current Barrage Height', 
-                                 'Lower Barrages by 0.1 m', 
-                                 "Raise Barrages by 0.1 m",
+    scale_fill_discrete(limits=c('Future Predictions With No Change To Barrage Gates', 
+                                 'More Barrage Gates Opened', 
+                                 "More Barrage Gates Closed",
                                  "Historical One-Day-\nAhead Predictions",
                                  "Historical Average"))
   }
