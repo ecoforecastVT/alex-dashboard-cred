@@ -208,14 +208,15 @@ Current Water Conditions
 
 ## Row {height="10%"}
 
-```{r}
+```{r, echo = FALSE}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Level"
 
 list(
- icon = "thermometer-half",
- color = "primary",
- value = current_temp
+  icon = "moisture",
+  color = "primary",
+  #value = label_percent(accuracy = 0.1)(p_preterm)
+  value = current_depth
 )
 ```
 
@@ -230,15 +231,14 @@ list(
 )
 ```
 
-```{r, echo = FALSE}
+```{r}
 #| content: valuebox
-#| title: "Lake Height"
+#| title: "Water Temperature"
 
 list(
-  icon = "moisture",
-  color = "primary",
-  #value = label_percent(accuracy = 0.1)(p_preterm)
-  value = current_depth
+ icon = "thermometer-half",
+ color = "primary",
+ value = current_temp
 )
 ```
 
@@ -279,13 +279,13 @@ Comparison to Historical Average
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Level"
 
 list(
- icon = temp_clim_values[[2]],
+ icon = height_clim_values[[2]],
  color = "primary",
- value = temp_clim_values[[3]]
- )
+ value = height_clim_values[[3]]
+)
 ```
 
 ```{r}
@@ -301,13 +301,13 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Lake Height"
+#| title: "Water Temperature"
 
 list(
- icon = height_clim_values[[2]],
+ icon = temp_clim_values[[2]],
  color = "primary",
- value = height_clim_values[[3]]
-)
+ value = temp_clim_values[[3]]
+ )
 ```
 
 ## Row {height="2%"}
@@ -318,12 +318,12 @@ Comparison to Previous 10-days
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Level"
 
 list(
- icon = temp_trend_historic[[2]],
+ icon = height_trend_historic[[2]],
  color = "primary",
- value = temp_trend_historic[[3]]
+ value = height_trend_historic[[3]]
 )
 ```
 
@@ -340,29 +340,29 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Lake Height"
+#| title: "Water Temperature"
 
 list(
- icon = height_trend_historic[[2]],
+ icon = temp_trend_historic[[2]],
  color = "primary",
- value = height_trend_historic[[3]]
+ value = temp_trend_historic[[3]]
 )
 ```
 
 ## Row {height="2%"}
 
-Future 10-day Trend
+Future 10-day Trend Assuming No Change To Barrage Gates
 
 ## Row {height="10%"}
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Level"
 
 list(
- icon = temp_trend_future[[2]],
+ icon = height_trend_future[[2]],
  color = "primary",
- value = temp_trend_future[[3]]
+ value = height_trend_future[[3]]
 )
 ```
 
@@ -379,18 +379,18 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Lake Height"
+#| title: "Water Temperature"
 
 list(
- icon = height_trend_future[[2]],
+ icon = temp_trend_future[[2]],
  color = "primary",
- value = height_trend_future[[3]]
+ value = temp_trend_future[[3]]
 )
 ```
 
 ## Row {height="2%"}
 
-The observed data are from [SA Water](https://www.sawater.com.au/) at the locations in the map below
+The observed data are from [Water Data SA](https://www.sawater.com.au/) at the locations in the map below
 
 ## Row {height="30%"}
 
@@ -422,13 +422,13 @@ Page last updated on `r Sys.Date()`
 
 # Water Quality Forecasts
 
-This page contains information about the water quality of Lake Alexandrina. Water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [VT Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data are provided by [Water Data SA](https://water.data.sa.gov.au/).
+This page contains information about the water quality of Lake Alexandrina. Water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data are provided by [Water Data SA](https://water.data.sa.gov.au/).
 
-All forecasts are valid for 8:00am AWST (00:00 UTC). Red dots indicate in-situ observations. The black line indicates the mean future forecast predictions if the current barrage height is maintained. Two other barrage scenarios are provided as well, showing predictions under increased or decreased barrage height. Uncertainty is provided for all three forecasts. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
+All forecasts are valid for 8:00am ACST (00:00 UTC) and represent predictions of 1-30 days ahead. Red dots indicate in-situ observations. The black line indicates the mean future forecast predictions if the current barrage conditions are maintained. Two other barrage scenarios are provided as well, showing predictions for increased or decreased barrage gate use. Uncertainty is provided for all three forecasts. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
-#| title: 'Water Temperature'
-
+#| title: 'Lake Level'
+#| 
 library(tidyverse)
 library(arrow)
 source('./R/dashboard_plotting_tool.R')
@@ -458,41 +458,31 @@ targets_df <- readr::read_csv(insitu_obs_url) |>
   mutate(variable = ifelse(variable == 'TEMP','temperature',variable)) |> 
   lubridate::with_tz(datetime, tzone = timezone)
 
+
+## DEPTH
+
+## Depth PLOT 
 obs_df <- targets_df |> 
-  filter(variable == 'temperature',
-         datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
-                                        timezone))
-
-# obs_df <- read_csv('./targets/ALEX-targets-insitu.csv') |> 
-#   mutate(datetime = lubridate::with_tz(lubridate::as_datetime(datetime), 'Australia/Adelaide')) |> 
-#   filter(variable == 'temperature',
-#          datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
-#                                         'Australia/Adelaide')) |>
-#   collect()
-
-# obs_df <- arrow::open_csv_dataset(s3_targets) |> 
-#   #read_csv('./targets/ALEX-targets-insitu.csv') |> 
-#   # filter(datetime <= obs_dates_grab,
-#   #        datetime <= most_recent) |> 
-#   filter(variable == 'temperature',
-#          datetime <= most_recent) |> 
-#   #select(datetime, observation) |> 
-#   collect() #|> 
-#   #mutate(reference_datetime = most_recent)
+  filter(variable == 'depth') |> 
+  mutate(observation = observation - 5.3) |> 
+  collect() |> 
+  mutate(reference_datetime = most_recent)
 
 score_df <- arrow::open_dataset(s3_score) |>
-  filter(variable == "temperature",
-         depth %in% c(0.5),
+  filter(variable == "depth",
          site_id %in% interest_site,
          horizon >= 0,
-         #reference_datetime == as.Date('1-05-25')) |> 
-         reference_datetime == (most_recent),
+         reference_datetime == most_recent,
          model_id == model_identifier) |>
+  mutate(mean = mean - 5.3,
+         quantile10 = quantile10 - 5.3,
+         quantile90 = quantile90 - 5.3,
+         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth)
   dplyr::collect()
 
+
 forecast_df_up_scenario <- arrow::open_dataset(s3_forecast) |>
-  filter(variable == "temperature",
-         depth %in% c(0.5),
+  filter(variable == "depth",
          site_id %in% interest_site,
          #horizon >= 0,
          #reference_datetime == as.Date('1-05-25')) |> 
@@ -501,17 +491,16 @@ forecast_df_up_scenario <- arrow::open_dataset(s3_forecast) |>
          model_id == 'glm_flare_v3_crest_up_0.1') |>
     dplyr::collect() |> 
   group_by(reference_datetime, datetime, depth, variable, site_id, model_id) |> 
-  mutate(up_median = median(prediction, na.rm = TRUE),
-         up_q10 = quantile(prediction, 0.1),
-         up_q90 = quantile(prediction, 0.9)) |> 
+  mutate(up_median = median(prediction, na.rm = TRUE) - 5.3,
+         up_q10 = quantile(prediction, 0.1) - 5.3,
+         up_q90 = quantile(prediction, 0.9) - 5.3) |> 
   ungroup() |> 
   distinct(reference_datetime, datetime, depth, variable, site_id, model_id, .keep_all = TRUE) |> 
   select(reference_datetime, datetime, depth, variable, up_median, up_q10, up_q90)
 
 
 forecast_df_down_scenario <- arrow::open_dataset(s3_forecast) |>
-  filter(variable == "temperature",
-         depth %in% c(0.5),
+  filter(variable == "depth",
          site_id %in% interest_site,
          #horizon >= 0,
          #reference_datetime == as.Date('1-05-25')) |> 
@@ -520,40 +509,43 @@ forecast_df_down_scenario <- arrow::open_dataset(s3_forecast) |>
          model_id == 'glm_flare_v3_crest_down_0.1') |>
     dplyr::collect() |> 
   group_by(reference_datetime, datetime, depth, variable, site_id, model_id) |> 
-  mutate(down_median = median(prediction, na.rm = TRUE),
-         down_q10 = quantile(prediction, 0.1),
-         down_q90 = quantile(prediction, 0.9)) |> 
+  mutate(down_median = median(prediction, na.rm = TRUE) - 5.3,
+         down_q10 = quantile(prediction, 0.1) - 5.3,
+         down_q90 = quantile(prediction, 0.9) - 5.3) |> 
   ungroup() |> 
   distinct(reference_datetime, datetime, depth, variable, site_id, model_id, .keep_all = TRUE) |> 
   select(reference_datetime, datetime, depth, variable, down_median, down_q10, down_q90)
 
 scenario_df <- forecast_df_down_scenario |> 
-  right_join(forecast_df_up_scenario, by = c('reference_datetime', 'datetime', 'depth', 'variable'))
+  right_join(forecast_df_up_scenario, by = c('reference_datetime', 'datetime', 'variable'))
 
 forecast_combined <- score_df |>
-  right_join(scenario_df, by = c('reference_datetime', 'datetime', 'depth', 'variable'))
+  right_join(scenario_df, by = c('reference_datetime', 'datetime', 'variable'))
 
 historical_horizon <- 60 
 historical_reference_datetime <- most_recent - days(historical_horizon)
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
-    filter(variable == "temperature",
-         depth %in% c(0.5),
+  filter(variable == "depth",
          site_id %in% interest_site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent,
          model_id == model_identifier) |> 
+  mutate(mean = mean - 5.3,
+         quantile10 = quantile10 - 5.3,
+         quantile90 = quantile90 - 5.3,
+         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
   collect()
-  
-# max_vals <- c(max(forecast_combined$quantile90), max(forecast_combined$down_q90), max(forecast_combined$up_q90))
-# min_vals <- c(min(forecast_combined$quantile10), min(forecast_combined$down_q10), min(forecast_combined$up_q10))
-# 
-# ylim_adjusted <- c(min(min_vals) - 0.1, max(max_vals) + 0.1)
 
-dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(10,30), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+max_vals <- c(max(forecast_combined$quantile90), max(forecast_combined$down_q90), max(forecast_combined$up_q90))
+min_vals <- c(min(forecast_combined$quantile10), min(forecast_combined$down_q10), min(forecast_combined$up_q10))
 
+ylim_adjusted <- c(min(min_vals) - 0.1, max(max_vals) + 0.1)
+
+dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(NA), tzone = timezone, ylims = ylim_adjusted, site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 ```
+
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 #| title: 'Salinity'
@@ -622,6 +614,8 @@ scenario_df <- forecast_df_down_scenario |>
 forecast_combined <- score_df |>
   right_join(scenario_df, by = c('reference_datetime', 'datetime', 'depth', 'variable'))
 
+historical_horizon <- 60 
+historical_reference_datetime <- most_recent - days(historical_horizon)
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
     filter(variable == "salt",
@@ -638,76 +632,42 @@ dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_histo
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
-#| title: 'Depth'
-
-## Depth PLOT 
+#| title: 'Water Temperature'
 obs_df <- targets_df |> 
-  #read_csv('./targets/ALEX-targets-insitu.csv') |> 
-  # filter(datetime <= obs_dates_grab,
-  #        datetime <= most_recent) |> 
-  filter(variable == 'depth') |> 
-  mutate(observation = observation - 5.3) |> 
-  #filter(datetime >= historical_reference_datetime) |> 
-  #select(datetime, observation) |> 
-  collect() |> 
-  mutate(reference_datetime = most_recent)
-
-# score_df <- arrow::open_dataset(s3_score) |>
-#   filter(variable == "salt",
-#          depth %in% c(0.5),
-#          site_id %in% interest_site,
-#          horizon >= 0,
-#          reference_datetime == most_recent,
-#          model_id == model_identifier) |>
-#   dplyr::collect()
-# 
-# score_df_historic <- arrow::open_dataset(s3_score) |> 
-#     filter(variable == "salt",
-#          depth %in% c(0.5),
-#          site_id %in% interest_site,
-#          horizon == 1,
-#          reference_datetime >= historical_reference_datetime, 
-#          reference_datetime < most_recent,
-#          model_id == model_identifier) |> 
-#   collect()
-  
-
-# dashboard_plotting_tool(data = score_df, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(0,1), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
-
+  filter(variable == 'temperature',
+         datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
+                                        timezone))
 
 score_df <- arrow::open_dataset(s3_score) |>
-  filter(variable == "depth",
+  filter(variable == "temperature",
+         depth %in% c(0.5),
          site_id %in% interest_site,
          horizon >= 0,
-         reference_datetime == most_recent,
+         #reference_datetime == as.Date('1-05-25')) |> 
+         reference_datetime == (most_recent),
          model_id == model_identifier) |>
-  mutate(mean = mean - 5.3,
-         quantile10 = quantile10 - 5.3,
-         quantile90 = quantile90 - 5.3,
-         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth)
   dplyr::collect()
 
-
 forecast_df_up_scenario <- arrow::open_dataset(s3_forecast) |>
-  filter(variable == "depth",
+  filter(variable == "temperature",
+         depth %in% c(0.5),
          site_id %in% interest_site,
-         #horizon >= 0,
-         #reference_datetime == as.Date('1-05-25')) |> 
          reference_datetime == (most_recent),
          datetime >= most_recent,
          model_id == 'glm_flare_v3_crest_up_0.1') |>
     dplyr::collect() |> 
   group_by(reference_datetime, datetime, depth, variable, site_id, model_id) |> 
-  mutate(up_median = median(prediction, na.rm = TRUE) - 5.3,
-         up_q10 = quantile(prediction, 0.1) - 5.3,
-         up_q90 = quantile(prediction, 0.9) - 5.3) |> 
+  mutate(up_median = median(prediction, na.rm = TRUE),
+         up_q10 = quantile(prediction, 0.1),
+         up_q90 = quantile(prediction, 0.9)) |> 
   ungroup() |> 
   distinct(reference_datetime, datetime, depth, variable, site_id, model_id, .keep_all = TRUE) |> 
   select(reference_datetime, datetime, depth, variable, up_median, up_q10, up_q90)
 
 
 forecast_df_down_scenario <- arrow::open_dataset(s3_forecast) |>
-  filter(variable == "depth",
+  filter(variable == "temperature",
+         depth %in% c(0.5),
          site_id %in% interest_site,
          #horizon >= 0,
          #reference_datetime == as.Date('1-05-25')) |> 
@@ -716,39 +676,33 @@ forecast_df_down_scenario <- arrow::open_dataset(s3_forecast) |>
          model_id == 'glm_flare_v3_crest_down_0.1') |>
     dplyr::collect() |> 
   group_by(reference_datetime, datetime, depth, variable, site_id, model_id) |> 
-  mutate(down_median = median(prediction, na.rm = TRUE) - 5.3,
-         down_q10 = quantile(prediction, 0.1) - 5.3,
-         down_q90 = quantile(prediction, 0.9) - 5.3) |> 
+  mutate(down_median = median(prediction, na.rm = TRUE),
+         down_q10 = quantile(prediction, 0.1),
+         down_q90 = quantile(prediction, 0.9)) |> 
   ungroup() |> 
   distinct(reference_datetime, datetime, depth, variable, site_id, model_id, .keep_all = TRUE) |> 
   select(reference_datetime, datetime, depth, variable, down_median, down_q10, down_q90)
 
 scenario_df <- forecast_df_down_scenario |> 
-  right_join(forecast_df_up_scenario, by = c('reference_datetime', 'datetime', 'variable'))
+  right_join(forecast_df_up_scenario, by = c('reference_datetime', 'datetime', 'depth', 'variable'))
 
 forecast_combined <- score_df |>
-  right_join(scenario_df, by = c('reference_datetime', 'datetime', 'variable'))
+  right_join(scenario_df, by = c('reference_datetime', 'datetime', 'depth', 'variable'))
 
+historical_horizon <- 60 
+historical_reference_datetime <- most_recent - days(historical_horizon)
 
 score_df_historic <- arrow::open_dataset(s3_score) |> 
-  filter(variable == "depth",
+    filter(variable == "temperature",
+         depth %in% c(0.5),
          site_id %in% interest_site,
          horizon == 1,
          reference_datetime >= historical_reference_datetime, 
          reference_datetime < most_recent,
          model_id == model_identifier) |> 
-  mutate(mean = mean - 5.3,
-         quantile10 = quantile10 - 5.3,
-         quantile90 = quantile90 - 5.3,
-         observation = observation - 5.3) |> # calculate AHD (5.3 maxdepth) |> 
   collect()
-
-max_vals <- c(max(forecast_combined$quantile90), max(forecast_combined$down_q90), max(forecast_combined$up_q90))
-min_vals <- c(min(forecast_combined$quantile10), min(forecast_combined$down_q10), min(forecast_combined$up_q10))
-
-ylim_adjusted <- c(min(min_vals) - 0.1, max(max_vals) + 0.1)
-
-dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(NA), tzone = timezone, ylims = ylim_adjusted, site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+  
+dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(10,30), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
@@ -1049,7 +1003,7 @@ at_plot
 
 # Learn more
 
-See below for additional information about Lake Alexandrina, information on how to access the forecasts for this site, and information about the [Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/) at Virginia Tech.
+The Lake Alexandrina Dashboard is the product of a collaborative project between the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/), the [Department for Environment and Water](https://www.environment.sa.gov.au/), and the [University of Western Australia](https://www.uwa.edu.au/). Other contributors include: CSIRO, the Murray-Darling Basin Authority, and SA Water. Department of Environment and Water staff have worked closely with the Virginia Tech team to develop the necessary model inputs, identify monitoring sites, and validate forecast scenarios to set up and test the Lake Alexandrina forecast model. The forecasts extending to 30 days ahead offer powerful insights into the impacts of different barrage opening decisions on both lake levels and Lake Alexandrina water quality variables. Combined with near real-time monitoring data for the region available on Water Data SA, forecasts presented in this dashboard deliver easy to interpret, informative insights for site managers and the community alike. 
 
 ::: {.card title = "Documentation for Lake Alexandrina Forecasts"}
 
@@ -1059,7 +1013,7 @@ We maintain and deploy the FLARE model framework to create our water quality for
 
 :::
 
-::: {.card title = "Relevant Research from the Center for Ecosystem Forecasting"}
+::: {.card title = "Relevant Research from the Virtginia Tech Center for Ecosystem Forecasting"}
 
 Publications and other information about [Lake Alexandrina](https://www.ltreb-reservoirs.org/products/#publications-forecasting-and-modeling).
 
