@@ -6,11 +6,11 @@ dashboard_plotting_tool <- function(data, historic_data, depths = 0.5, tzone = "
   num_depths <- length(unique(data$depth))
   
   if(data_var == 'temperature'){
-    var_title = 'Water Temperature'
+    var_title = 'Lake Water Temperature'
     var_unit = 'Temperature (°C)'
     label_height_adjust <- 1
   } else if(data_var == 'salt'){
-    var_title = 'Salinity'
+    var_title = 'Lake Salinity'
     var_unit = 'Salinity (ppt)'
     label_height_adjust <- 0.01
   } else if(data_var == 'depth'){
