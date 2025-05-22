@@ -199,7 +199,7 @@ Data for Lake Alexandrina:
 ::: {.callout-note collapse="true"}
 ## Disclaimer
 
-The data provided on this page are experimental
+The forecasts provided on this page are an experimental research product and provided as-is. The Virginia Tech Center for Ecosystem Forecasting is not responsible for any decisions that are made because of this information.
 :::
 
 # Current Conditions
@@ -222,7 +222,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Salinity"
+#| title: "Lake Salinity"
 
 list(
  icon = "droplet-half",
@@ -233,7 +233,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Water Temperature"
 
 list(
  icon = "thermometer-half",
@@ -290,7 +290,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity"
+#| title: "Lake Water Salinity"
 
 list(
  icon = salt_clim_values[[2]],
@@ -301,7 +301,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Water Temperature"
 
 list(
  icon = temp_clim_values[[2]],
@@ -329,7 +329,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity"
+#| title: "Lake Water Salinity"
 
 list(
  icon = salt_trend_historic[[2]],
@@ -340,7 +340,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Water Temperature"
 
 list(
  icon = temp_trend_historic[[2]],
@@ -368,7 +368,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Salinity"
+#| title: "Lake Water Salinity"
 
 list(
  icon = salt_trend_future[[2]],
@@ -379,7 +379,7 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title: "Water Temperature"
+#| title: "Lake Water Temperature"
 
 list(
  icon = temp_trend_future[[2]],
@@ -424,7 +424,7 @@ Page last updated on `r Sys.Date()`
 
 This page contains information about the water quality of Lake Alexandrina. Water quality forecasts are created using the [FLARE](https://flare-forecast.org/) modeling framework deployed by the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/). Observational data are provided by [Water Data SA](https://water.data.sa.gov.au/).
 
-All forecasts are valid for 8:00am ACST (00:00 UTC) and represent predictions of 1-30 days ahead. Red dots indicate in-situ observations. The black line indicates the mean future forecast predictions if the current barrage conditions are maintained. Two other barrage scenarios are provided as well, showing predictions for increased or decreased barrage gate use. Uncertainty is provided for all three forecasts. The climatology average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
+All forecasts are valid for 8:00am ACST (00:00 UTC) and represent predictions of 1-30 days ahead. Red dots indicate in-situ observations. The black line indicates the mean future forecast predictions if the current barrage conditions are maintained. Two other barrage scenarios are provided as well, showing predictions for increased or decreased barrage gate openings. Uncertainty is provided for all three forecasts. The historical average is also included to provide a comparison of the current observations and forecast predictions against typical conditions for this time period.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 #| title: 'Lake Level'
@@ -548,7 +548,7 @@ dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_histo
 
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
-#| title: 'Salinity'
+#| title: 'Lake Salinity'
 
 ## SALT PLOT 
 obs_df <- targets_df |> 
@@ -632,7 +632,7 @@ dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_histo
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
-#| title: 'Water Temperature'
+#| title: 'Lake Water Temperature'
 obs_df <- targets_df |> 
   filter(variable == 'temperature',
          datetime <= lubridate::with_tz(lubridate::as_datetime(most_recent) + lubridate::days(1),
@@ -708,7 +708,7 @@ dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_histo
 
 # Weather Forecasts
 
-This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php). Observations are provided by [Water Data SA](https://water.data.sa.gov.au/).
+This page contains information about weather in the Lake Alexandrina area. Weather forecasts shown here are provided by the U.S. based [NOAA GEFS](https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast) model, which is used as input for the water quality forecasts. Local weather forecasts can be accessed from the [Bureau of Meteorology](https://reg.bom.gov.au/index.php).
 
 ::: {.card title="Wind Forecast with Historical Observations" height="300%"}
 All forecasts are valid for 10:30am ACDT (00:00 UTC). The red line represents observed wind speed with red arrows indicating the wind direction at each available in-situ observation. The black line represents the mean forecast predictions for wind speed with black arrows indicating the wind direction at each prediction. Both past and future wind predictions are provided. The observations and predictions shown represent six-hour averages across the time period.
@@ -1003,19 +1003,19 @@ at_plot
 
 # Learn more
 
-The Lake Alexandrina Dashboard is the product of a collaborative project between the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/), the [Department for Environment and Water](https://www.environment.sa.gov.au/), and the [University of Western Australia](https://www.uwa.edu.au/). Other contributors include: CSIRO, the Murray-Darling Basin Authority, and SA Water. Department of Environment and Water staff have worked closely with the Virginia Tech team to develop the necessary model inputs, identify monitoring sites, and validate forecast scenarios to set up and test the Lake Alexandrina forecast model. The forecasts extending to 30 days ahead offer powerful insights into the impacts of different barrage opening decisions on both lake levels and Lake Alexandrina water quality variables. Combined with near real-time monitoring data for the region available on Water Data SA, forecasts presented in this dashboard deliver easy to interpret, informative insights for site managers and the community alike. 
+The Lake Alexandrina Dashboard is the product of a collaborative project between the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/), the [South Australian Department for Environment and Water](https://www.environment.sa.gov.au/), and the [University of Western Australia](https://www.uwa.edu.au/). Other contributors include: CSIRO, the Murray-Darling Basin Authority, and SA Water. Department of Environment and Water staff have worked closely with the Virginia Tech team to develop the necessary model inputs, identify monitoring sites, and validate forecast scenarios to set up and test the Lake Alexandrina forecast model. The forecasts extending to 30 days ahead offer powerful insights into the impacts of different barrage opening decisions on both lake levels and Lake Alexandrina water quality variables. Combined with near real-time monitoring data for the region available on Water Data SA, forecasts presented in this dashboard deliver easy to interpret, informative insights for site managers and the community alike. 
 
 ::: {.card title = "Documentation for Lake Alexandrina Forecasts"}
 
-We provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
+The Virginia Tech Center for Ecosystem Forecasting provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
 
 We maintain and deploy the FLARE model framework to create our water quality forecasts. More information on the FLARE project can be found [here](https://flare-forecast.org/)
 
 :::
 
-::: {.card title = "Relevant Research from the Virtginia Tech Center for Ecosystem Forecasting"}
+::: {.card title = "Relevant Research from the Virginia Tech Center for Ecosystem Forecasting"}
 
-Publications and other information about [Lake Alexandrina](https://www.ltreb-reservoirs.org/products/#publications-forecasting-and-modeling).
+Learn more about other forecasting applications by the Virginia Tech Center for Ecosystem Forecasting [here](https://www.ltreb-reservoirs.org/products/#publications-forecasting-and-modeling).
 
 Learn more about the ongoing research at the Center for Ecosystem Forecasting [here](https://ecoforecast.centers.vt.edu/research.html).
 
