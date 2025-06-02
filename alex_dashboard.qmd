@@ -701,6 +701,15 @@ score_df_historic <- arrow::open_dataset(s3_score) |>
          reference_datetime < most_recent,
          model_id == model_identifier) |> 
   collect()
+
+max_vals <- c(max(forecast_combined$quantile90), max(forecast_combined$down_q90), max(forecast_combined$up_q90))
+min_vals <- c(min(forecast_combined$quantile10), min(forecast_combined$down_q10), min(forecast_combined$up_q10))
+
+ylim_adjusted <- c(min(min_vals) - 10, max(max_vals) + 10)
+
+if (ylim_adjusted[1] < 0){
+  ylim_adjusted <- c(0,max(max_vals) + 10)
+}
   
 dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(10,30), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
