@@ -711,7 +711,7 @@ if (ylim_adjusted[1] < 0){
   ylim_adjusted <- c(0,max(max_vals) + 10)
 }
   
-dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = c(10,30), site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
+dashboard_plotting_tool(data = forecast_combined, historic_data = score_df_historic, depths = c(0.5), tzone = timezone, ylims = ylim_adjusted, site_name = interest_site, obs_hist = obs_df, historical_horizon = historical_horizon, forecast_horizon_confidence = 10)
 
 ```
 
