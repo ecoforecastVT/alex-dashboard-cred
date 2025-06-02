@@ -312,7 +312,7 @@ list(
 
 ## Row {height="2%"}
 
-Comparison to Previous 10-days
+Comparison to Previous 10 days
 
 ## Row {height="10%"}
 
@@ -1012,13 +1012,15 @@ at_plot
 
 # Learn more
 
-The Lake Alexandrina Dashboard is the product of a collaborative project between the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/), the [South Australian Department for Environment and Water](https://www.environment.sa.gov.au/), and the [University of Western Australia](https://www.uwa.edu.au/). Other contributors include: CSIRO, the Murray-Darling Basin Authority, and SA Water. Department of Environment and Water staff have worked closely with the Virginia Tech team to develop the necessary model inputs, identify monitoring sites, and validate forecast scenarios to set up and test the Lake Alexandrina forecast model. The forecasts extending to 30 days ahead offer powerful insights into the impacts of different barrage opening decisions on both lake levels and Lake Alexandrina water quality variables. Combined with near real-time monitoring data for the region available on Water Data SA, forecasts presented in this dashboard deliver easy to interpret, informative insights for site managers and the community alike. 
+The Lake Alexandrina Dashboard is the product of a collaborative project between the [Virginia Tech Center for Ecosystem Forecasting](https://ecoforecast.centers.vt.edu/), the [South Australian Department for Environment and Water](https://www.environment.sa.gov.au/), and the [University of Western Australia](https://www.uwa.edu.au/). Other contributors include representatives from: the [Commonwealth Environmental Water Holder](https://www.dcceew.gov.au/cewh), [CSIRO](https://www.csiro.au/), the [Goyder Institute for Water Research](https://goyderinstitute.org/), [Melbourne Water](https://www.melbournewater.com.au), the [Murray-Darling Basin Authority](https://www.mdba.gov.au/), and [SA Water](https://www.sawater.com.au/). Department of Environment and Water staff have worked closely with the Virginia Tech team to develop the necessary model inputs, identify monitoring sites, and validate forecast scenarios to set up and test the Lake Alexandrina forecast model. The forecasts extending to 30 days ahead offer powerful insights into the impacts of different barrage opening decisions on both lake levels and Lake Alexandrina water quality variables. Combined with near real-time monitoring data for the region available on Water Data SA, forecasts presented in this dashboard deliver easy to interpret, informative insights for site managers and the community alike. 
 
 ::: {.card title = "Documentation for Lake Alexandrina Forecasts"}
 
-The Virginia Tech Center for Ecosystem Forecasting provide the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
+The Virginia Tech Center for Ecosystem Forecasting provides the full code repository for Lake Alexandrina forecasts [here](https://github.com/FLARE-forecast/ALEX-forecast-code).
 
-We maintain and deploy the FLARE model framework to create our water quality forecasts. More information on the FLARE project can be found [here](https://flare-forecast.org/)
+We maintain and deploy the FLARE model framework to create our water quality forecasts. More information on the FLARE project can be found [here](https://flare-forecast.org/).
+
+This material is based upon work supported by the National Science Foundation under Grant OISE-2330211. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
 
 :::
 
