@@ -199,7 +199,7 @@ Data for Lake Alexandrina:
 ::: {.callout-note collapse="true"}
 ## Disclaimer
 
-Disclaimer: The dashboard and all contents thereof and all services are provided on an "as is" basis without any warranty or condition, express, implied or statutory. User acknowledges any forecast is an experimental research product and there are uncertainties inherent in attempting to make projections, forecasts, and plans. User takes full responsibility for making its own evaluation of the adequacy and accuracy of all projections, forecasts, and plans
+The dashboard and all contents thereof and all services are provided on an "as is" basis without any warranty or condition, express, implied or statutory. User acknowledges any forecast is an experimental research product and there are uncertainties inherent in attempting to make projections, forecasts, and plans. User takes full responsibility for making its own evaluation of the adequacy and accuracy of all projections, forecasts, and plans
 :::
 
 # Current Conditions
