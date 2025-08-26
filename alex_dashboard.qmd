@@ -911,8 +911,8 @@ wind_plot_df <- full_met_data_df |>
 compass <-readJPEG('./north_arrow_black.jpg')
 
 
-weather_time_match <- lubridate::with_tz(most_recent, tzone = timezone) - 
-  lubridate::hours(4) - lubridate::minutes(30)
+weather_time_match <- lubridate::with_tz(most_recent, tzone = timezone) #- 
+  #lubridate::hours(4) - lubridate::minutes(30)
 
 wind_plot_x_labels <- wind_plot_df |> 
   mutate(hour = lubridate::hour(hour_group)) |> 
